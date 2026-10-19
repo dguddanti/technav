@@ -51,16 +51,6 @@ export default function App() {
           <Combobox id="from" label="From" value={from} options={names}
             placeholder="Search location" describedBy="validation" invalid={!!from.trim() && !a}
             onChange={(value) => { setFrom(value); setError(''); }} />
-          <button type="button" className="swap" aria-label="Swap start and destination" onClick={() => {
-            setFrom(to);
-            setTo(from);
-            setError('');
-          }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M7 4v16m-4-4 4 4 4-4M17 20V4m-4 4 4-4 4 4" />
-            </svg>
-            Swap
-          </button>
           <Combobox id="to" label="To" value={to} options={names}
             placeholder="Search location" describedBy="validation" invalid={(!!to.trim() && !b) || (!!a && a === b)}
             onChange={(value) => { setTo(value); setError(''); }} />

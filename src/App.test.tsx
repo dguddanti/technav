@@ -9,44 +9,6 @@ afterEach(() => {
 });
 
 describe('route planning', () => {
-  it('swaps endpoints without submitting and plans the reversed route', () => {
-    render(<App />);
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F125' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Swap start and destination' }));
-    expect(screen.getByLabelText('From')).toHaveValue('F125');
-    expect(screen.getByLabelText('To')).toHaveValue('Main Entrance');
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
-    expect(screen.getByRole('img', { name: 'Route from F125 to Main Entrance' })).toBeInTheDocument();
-  });
-
-  it('swaps blank and unsupported input exactly and can swap back', () => {
-    render(<App />);
-    const swap = screen.getByRole('button', { name: 'Swap start and destination' });
-    fireEvent.click(swap);
-    expect(screen.getByLabelText('From')).toHaveValue('');
-    expect(screen.getByLabelText('To')).toHaveValue('Main Entrance');
-    expect(screen.getByRole('button', { name: 'Get Directions' })).toBeDisabled();
-    fireEvent.change(screen.getByLabelText('From'), { target: { value: ' unsupported ' } });
-    fireEvent.click(swap);
-    expect(screen.getByLabelText('To')).toHaveValue(' unsupported ');
-    expect(screen.getByRole('button', { name: 'Get Directions' })).toBeDisabled();
-    fireEvent.click(swap);
-    expect(screen.getByLabelText('From')).toHaveValue(' unsupported ');
-    expect(screen.getByLabelText('To')).toHaveValue('Main Entrance');
-  });
-
-  it('clears the previous route error when swapping endpoints', () => {
-    vi.spyOn(routing, 'getSteps').mockImplementation(() => { throw new Error('Route unavailable'); });
-    render(<App />);
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F125' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Route unavailable');
-    fireEvent.click(screen.getByRole('button', { name: 'Swap start and destination' }));
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('From')).toHaveValue('F125');
-  });
-
   it('labels both inputs and disables directions until a destination is selected', () => {
     render(<App />);
     expect(screen.getByLabelText('From')).toHaveValue('Main Entrance');
