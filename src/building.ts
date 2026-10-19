@@ -1,5 +1,6 @@
 import * as first from './map-data';
 import { floor as basement } from './floors/floor-B';
+import { floor as ground } from './floors/floor-G';
 import { floor as firstExtras } from './floors/floor-1';
 import { floor as second } from './floors/floor-2';
 import { floor as third } from './floors/floor-3';
@@ -7,11 +8,12 @@ import { floor as fourth } from './floors/floor-4';
 import type { FloorData, Shaft } from './floors/types';
 import type { Point } from './route';
 
-export type Floor = 'B' | '1' | '2' | '3' | '4';
+export type Floor = 'B' | 'G' | '1' | '2' | '3' | '4';
 
 // Bottom to top. Every plan shares the first floor's 1948 x 1904 coordinate space.
 export const FLOORS: { id: Floor; name: string; image: string }[] = [
   { id: 'B', name: 'Basement', image: '/maps/floor-B.png' },
+  { id: 'G', name: 'Ground floor', image: '/maps/floor-G.png' },
   { id: '1', name: 'Floor 1', image: '/map.png' },
   { id: '2', name: 'Floor 2', image: '/maps/floor-2.png' },
   { id: '3', name: 'Floor 3', image: '/maps/floor-3.png' },
@@ -20,6 +22,7 @@ export const FLOORS: { id: Floor; name: string; image: string }[] = [
 
 const data: Record<Floor, FloorData> = {
   B: basement,
+  G: ground,
   // The first floor is hand drawn; the generated file only adds its stairs and elevators.
   1: {
     nodes: { ...first.nodes, ...firstExtras.nodes },

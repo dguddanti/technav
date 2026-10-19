@@ -292,13 +292,13 @@ export const floor: FloorData = {
     'MB80A': ['n87', [1532, 929]],
   },
   shafts: {
-    ST18: { kind: 'stairs', node: 'n59' },
+    STx: { kind: 'stairs', node: 'n59' },
     EL1: { kind: 'elevator', node: 'n70' },
     ST19: { kind: 'stairs', node: 'n69' },
     EL4: { kind: 'elevator', node: 'n34' },
     ST20: { kind: 'stairs', node: 'n75' },
     ST14: { kind: 'stairs', node: 'n27' },
     ST4: { kind: 'stairs', node: 'n13' },
-    STx: { kind: 'stairs', node: 'n19' },
+    STx_2: { kind: 'stairs', node: 'n19' },
   },
 };

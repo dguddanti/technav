@@ -631,12 +631,12 @@ export const floor: FloorData = {
     'M489': ['n163', [1422, 930]],
   },
   shafts: {
-    STx_2: { kind: 'stairs', node: 'n66' },
-    STx_3: { kind: 'stairs', node: 'n124' },
+    STx_3: { kind: 'stairs', node: 'n66' },
+    STx_4: { kind: 'stairs', node: 'n124' },
     ST30: { kind: 'stairs', node: 'n138' },
     EL3: { kind: 'elevator', node: 'n199' },
     ST1: { kind: 'stairs', node: 'n177' },
     ST2: { kind: 'stairs', node: 'n197' },
-    ST35: { kind: 'stairs', node: 'n27' },
+    ST35_2: { kind: 'stairs', node: 'n27' },
   },
 };

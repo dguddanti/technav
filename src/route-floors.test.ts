@@ -32,6 +32,13 @@ describe('routes between floors', () => {
     expect(steps.at(-1)?.floor).toBe('B');
   });
 
+  it('reaches the ground floor between the basement and Floor 1', () => {
+    expect(placeFloor.NG47).toBe('G');
+    const steps = getSteps('Main Entrance', 'NG47');
+    expect(steps.some((step) => step.turn === 'down' && step.text.endsWith('to Ground floor.'))).toBe(true);
+    expect(steps.at(-1)?.floor).toBe('G');
+  });
+
   it('uses only elevators for a step-free route', () => {
     const steps = getSteps('A112', 'M445', { avoidStairs: true });
     const rides = steps.filter((step) => step.turn === 'up' || step.turn === 'down');
