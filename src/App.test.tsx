@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from './App';
 import * as routing from './route';
 
@@ -103,4 +103,75 @@ describe('route planning', () => {
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F125' } });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
+});
+
+describe('route overview', () => {
+  const planRoute = () => {
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'A112' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
+  };
+
+  it('shows an ordered overview with the current step marked', () => {
+    render(<App />);
+    expect(screen.queryByRole('button', { name: 'View all steps' })).not.toBeInTheDocument();
+    planRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    const overview = screen.getByRole('region', { name: 'All directions' });
+    expect(within(overview).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(overview).getByRole('button', { name: /^Step 1:/ })).toHaveAttribute('aria-current', 'step');
+    expect(within(overview).getByRole('button', { name: /^Step 4:.*You have arrived/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back to map' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('jumps to a selected step and continues normal Back/Next navigation', () => {
+    render(<App />);
+    planRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Step 2:/ }));
+    expect(screen.queryByRole('region', { name: 'All directions' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Turn left' })).toBeInTheDocument();
+    expect(screen.getByText('About 135 ft')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '2');
+    expect(screen.getByRole('button', { name: 'View all steps' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '3');
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '2');
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    expect(screen.getByRole('button', { name: /^Step 2:/ })).toHaveAttribute('aria-current', 'step');
+  });
+
+  it('returns to the same map step when the overview is dismissed', () => {
+    render(<App />);
+    planRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to map' }));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '2');
+    expect(screen.getByRole('img')).toBeInTheDocument();
+  });
+
+  it('can jump to arrival and finish the route', () => {
+    render(<App />);
+    planRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Step 4:/ }));
+    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '4');
+    expect(screen.getByRole('heading', { name: 'You have arrived' })).toBeInTheDocument();
+    expect(screen.getByText('A112 · on your left')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByLabelText('To')).toHaveValue('A112');
+  });
+
+  it('opens a new route on the map after leaving an overview', () => {
+    render(<App />);
+    planRoute();
+    fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit route' }));
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F125' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
+    expect(screen.getByRole('img', { name: 'Route from Main Entrance to F125' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View all steps' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
 });

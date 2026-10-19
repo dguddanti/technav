@@ -149,6 +149,18 @@ h1, h2, p { margin: 0; }
 .instruction p:not(.sr-only) { margin-top: 4px; font-size: 15px; line-height: 24px; letter-spacing: -.15px; }
 .instruction p.eyebrow { font-size: 12px; line-height: 18px; letter-spacing: .1px; }
 .nav { display: grid; grid-template-columns: 104px 1fr; gap: 12px; flex-shrink: 0; }
+.overview-toggle { align-self: flex-start; flex-shrink: 0; min-height: 44px; margin: -8px 0; padding: 8px 0; border: 0; background: transparent; color: var(--primary); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.route-content { display: flex; flex-direction: column; gap: inherit; flex: 1; min-height: 0; }
+.overview { flex: 1; min-height: 0; overflow-y: auto; padding: 3px; }
+.overview h2 { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+.overview ol { list-style: none; margin: 0; padding: 0; }
+.overview li + li { border-top: 1px solid var(--border); }
+.overview-step { display: grid; grid-template-columns: 24px 1fr; gap: 4px 12px; align-items: start; width: 100%; min-height: 44px; padding: 14px 8px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font: inherit; font-size: 15px; line-height: 1.5; text-align: left; cursor: pointer; }
+.overview-step[aria-current="step"] { background: var(--soft); font-weight: 600; }
+.overview-step:hover { background: var(--soft); }
+.overview-step:focus-visible, .overview-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.step-number { color: var(--primary); font-weight: 700; font-variant-numeric: tabular-nums; }
+.current-step { grid-column: 2; color: var(--primary); font-size: 13px; }
 
 @media (max-height: 650px) {
   .planner, .navigation { padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
