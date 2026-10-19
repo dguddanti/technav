@@ -11,8 +11,6 @@ export interface Step {
 
 // Placeholder scale. Calibrate: measure one real hallway in feet, divide by its pixel length.
 export const FEET_PER_PX = 0.3;
-// Segments shorter than this (in map pixels) never create a turn of their own.
-const MIN_LEG = 35;
 
 const adj: Record<string, [string, number][]> = {};
 for (const [a, b] of edges) {
@@ -39,6 +37,9 @@ function findPath(from: string, to: string): string[] {
       }
     }
   }
+  if (best[to] === undefined) {
+    throw new Error('No connected route is available between these locations. Choose another location.');
+  }
   const path = [to];
   while (path[0] !== from) path.unshift(prev[path[0]]);
   return path;
@@ -46,14 +47,22 @@ function findPath(from: string, to: string): string[] {
 
 const sub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
 const dist = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-const feet = (a: Point, b: Point) => Math.max(5, Math.round((dist(a, b) * FEET_PER_PX) / 5) * 5);
+const feet = (pts: Point[]) => Math.max(5, Math.round((pts.slice(1).reduce(
+  (sum, point, i) => sum + dist(pts[i], point), 0,
+) * FEET_PER_PX) / 5) * 5);
 // Snap a direction to 0 east, 1 south, 2 west, 3 north. Going up the index is a right turn.
 const compass = (v: Point) => (Math.round(Math.atan2(v[1], v[0]) / (Math.PI / 2)) + 4) % 4;
 const rel = (from: number, to: number) => (to - from + 4) % 4; // 0 ahead, 1 right, 2 behind, 3 left
 
 export function getSteps(from: string, to: string): Step[] {
+  if (!Object.hasOwn(places, from) || !Object.hasOwn(places, to)) {
+    throw new Error('Choose a listed first-floor location for both From and To.');
+  }
   const [startNode, startDoor] = places[from];
   const [endNode, endDoor] = places[to];
+  if (from === to) {
+    return [{ turn: 'arrive', text: `You are already at ${to}.`, pts: [startDoor, startDoor] }];
+  }
 
   // Start at the door, walk the hallway nodes, skip repeated points.
   const pts: Point[] = [startDoor];
@@ -64,40 +73,35 @@ export function getSteps(from: string, to: string): Step[] {
   }
   if (pts.length < 2) pts.push(endDoor);
 
-  // Merge segments into legs. A very short leg adopts the direction of what follows it.
-  const legs: { d: number; tiny: boolean; pts: Point[] }[] = [];
+  // Group directions without discarding hallway points or merging across corners.
+  const legs: { d: number; pts: Point[] }[] = [];
   for (let i = 1; i < pts.length; i++) {
     const v = sub(pts[i], pts[i - 1]);
     const d = compass(v);
-    const tiny = dist(pts[i], pts[i - 1]) < MIN_LEG;
     const last = legs[legs.length - 1];
-    if (last && last.tiny) {
-      last.d = d;
-      last.tiny = tiny;
-      last.pts[1] = pts[i];
-    } else if (last && (d === last.d || tiny)) {
-      last.pts[1] = pts[i];
+    if (last && d === last.d) {
+      last.pts.push(pts[i]);
     } else {
-      legs.push({ d, tiny, pts: [pts[i - 1], pts[i]] });
+      legs.push({ d, pts: [pts[i - 1], pts[i]] });
     }
   }
 
   const steps: Step[] = legs.map((leg, i) => {
-    const ft = feet(leg.pts[0], leg.pts[1]);
+    const ft = feet(leg.pts);
     if (i === 0) {
-      const text = from === 'Main Entrance' ? `Walk straight ahead for ${ft} ft.` : `Exit ${from} and walk ${ft} ft.`;
+      const text = from === 'Main Entrance' ? `Walk straight ahead for about ${ft} ft.` : `Exit ${from} and walk about ${ft} ft.`;
       return { turn: 'straight', text, pts: leg.pts };
     }
     const r = rel(legs[i - 1].d, leg.d);
-    if (r === 1) return { turn: 'right', text: `Turn right. Walk ${ft} ft.`, pts: leg.pts };
-    if (r === 3) return { turn: 'left', text: `Turn left. Walk ${ft} ft.`, pts: leg.pts };
-    return { turn: 'around', text: `Turn around. Walk ${ft} ft.`, pts: leg.pts };
+    if (r === 1) return { turn: 'right', text: `Turn right. Walk about ${ft} ft.`, pts: leg.pts };
+    if (r === 3) return { turn: 'left', text: `Turn left. Walk about ${ft} ft.`, pts: leg.pts };
+    return { turn: 'around', text: `Turn around. Walk about ${ft} ft.`, pts: leg.pts };
   });
 
   const lastLeg = legs[legs.length - 1];
-  const end = lastLeg.pts[1];
+  const end = lastLeg.pts[lastLeg.pts.length - 1];
   const toDoor = sub(endDoor, end);
-  const r = dist(endDoor, end) < MIN_LEG ? 0 : rel(lastLeg.d, compass(toDoor));
+  const r = dist(endDoor, end) === 0 ? 0 : rel(lastLeg.d, compass(toDoor));
   const where = ['straight ahead', 'on your right', 'behind you', 'on your left'][r];
   steps.push({ turn: 'arrive', text: `${to} is ${where}. You have arrived.`, pts: [end, endDoor] });
 
