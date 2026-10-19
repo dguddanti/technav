@@ -9,6 +9,7 @@ select, input { padding: 14px; font-size: 16px; border: 1px solid #ccc; border-r
 button { padding: 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 10px; background: #fff; }
 button.primary { background: #4e2a84; color: #fff; border: none; font-weight: 600; }
 button:disabled { opacity: 0.4; }
+.swap { align-self: flex-end; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; color: #4e2a84; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 header span { flex-shrink: 0; font-size: 14px; }
 header button { border: none; padding: 4px 0; color: #4e2a84; font-weight: 600; }
@@ -29,5 +30,5 @@ header button { border: none; padding: 4px 0; color: #4e2a84; font-weight: 600; 
 input:focus-visible, button:focus-visible { outline: 3px solid #4e2a84; outline-offset: 3px; }
 button:not(:disabled):hover { border-color: #4e2a84; }
 button.primary:not(:disabled):hover { background: #3c2068; }
-button.primary:only-of-type { margin-top: auto; }
+.route-form > button.primary { margin-top: auto; }
 @media (max-height: 640px) { main { gap: 8px; padding-top: 10px; } .card { padding: 10px; } .card p { font-size: 16px; } .arrow { font-size: 30px; } button { padding: 10px; } }

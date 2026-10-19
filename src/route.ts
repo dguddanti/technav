@@ -11,6 +11,8 @@ export interface Step {
 
 // Placeholder scale. Calibrate: measure one real hallway in feet, divide by its pixel length.
 export const FEET_PER_PX = 0.3;
+// Do not give sub-three-pixel directional runs their own walking instruction.
+const MIN_DIRECTION_PX = 3;
 
 const adj: Record<string, [string, number][]> = {};
 for (const [a, b] of edges) {
@@ -47,9 +49,13 @@ function findPath(from: string, to: string): string[] {
 
 const sub = (a: Point, b: Point): Point => [a[0] - b[0], a[1] - b[1]];
 const dist = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-const feet = (pts: Point[]) => Math.max(5, Math.round((pts.slice(1).reduce(
+const pathLength = (pts: Point[]) => pts.slice(1).reduce(
   (sum, point, i) => sum + dist(pts[i], point), 0,
-) * FEET_PER_PX) / 5) * 5);
+);
+const distanceText = (pts: Point[]) => {
+  const ft = Math.round((pathLength(pts) * FEET_PER_PX) / 5) * 5;
+  return ft === 0 ? 'a short distance' : `about ${ft} ft`;
+};
 // Snap a direction to 0 east, 1 south, 2 west, 3 north. Going up the index is a right turn.
 const compass = (v: Point) => (Math.round(Math.atan2(v[1], v[0]) / (Math.PI / 2)) + 4) % 4;
 const rel = (from: number, to: number) => (to - from + 4) % 4; // 0 ahead, 1 right, 2 behind, 3 left
@@ -86,19 +92,36 @@ export function getSteps(from: string, to: string): Step[] {
     }
   }
 
-  const steps: Step[] = legs.map((leg, i) => {
-    const ft = feet(leg.pts);
+  // Keep every map point, but fold tiny directional runs into the walking instruction.
+  // Initial noise adopts the next meaningful heading; trailing noise never replaces one.
+  const directions: { d: number; pts: Point[]; hasDirection: boolean }[] = [];
+  for (const leg of legs) {
+    const hasDirection = pathLength(leg.pts) >= MIN_DIRECTION_PX;
+    const last = directions[directions.length - 1];
+    if (last && (!hasDirection || !last.hasDirection || last.d === leg.d)) {
+      last.pts.push(...leg.pts.slice(1));
+      if (hasDirection && !last.hasDirection) {
+        last.d = leg.d;
+        last.hasDirection = true;
+      }
+    } else {
+      directions.push({ d: leg.d, pts: [...leg.pts], hasDirection });
+    }
+  }
+
+  const steps: Step[] = directions.map((leg, i) => {
+    const distance = distanceText(leg.pts);
     if (i === 0) {
-      const text = from === 'Main Entrance' ? `Walk straight ahead for about ${ft} ft.` : `Exit ${from} and walk about ${ft} ft.`;
+      const text = from === 'Main Entrance' ? `Walk straight ahead for ${distance}.` : `Exit ${from} and walk ${distance}.`;
       return { turn: 'straight', text, pts: leg.pts };
     }
-    const r = rel(legs[i - 1].d, leg.d);
-    if (r === 1) return { turn: 'right', text: `Turn right. Walk about ${ft} ft.`, pts: leg.pts };
-    if (r === 3) return { turn: 'left', text: `Turn left. Walk about ${ft} ft.`, pts: leg.pts };
-    return { turn: 'around', text: `Turn around. Walk about ${ft} ft.`, pts: leg.pts };
+    const r = rel(directions[i - 1].d, leg.d);
+    if (r === 1) return { turn: 'right', text: `Turn right. Walk ${distance}.`, pts: leg.pts };
+    if (r === 3) return { turn: 'left', text: `Turn left. Walk ${distance}.`, pts: leg.pts };
+    return { turn: 'around', text: `Turn around. Walk ${distance}.`, pts: leg.pts };
   });
 
-  const lastLeg = legs[legs.length - 1];
+  const lastLeg = directions[directions.length - 1];
   const end = lastLeg.pts[lastLeg.pts.length - 1];
   const toDoor = sub(endDoor, end);
   const r = dist(endDoor, end) === 0 ? 0 : rel(lastLeg.d, compass(toDoor));

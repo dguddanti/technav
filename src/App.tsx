@@ -40,6 +40,16 @@ export default function App() {
         }}>
         <label htmlFor="from">From</label>
         <input id="from" list="places" value={from} placeholder="Room, e.g. A112" aria-describedby="scope validation" onChange={(e) => { setFrom(e.target.value); setError(''); }} />
+        <button type="button" className="swap" aria-label="Swap start and destination" onClick={() => {
+          setFrom(to);
+          setTo(from);
+          setError('');
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M7 4v16m-4-4 4 4 4-4M17 20V4m-4 4 4-4 4 4" />
+          </svg>
+          Swap
+        </button>
         <label htmlFor="to">To</label>
         <input id="to" list="places" value={to} placeholder="Room, e.g. F125" aria-describedby="scope validation" onChange={(e) => { setTo(e.target.value); setError(''); }} />
         <datalist id="places">
