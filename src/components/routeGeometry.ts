@@ -17,4 +17,3 @@ export const pointAlongPath = (points: Point[], distance: number): Point => {
   }
   return points.at(-1)!;
 };
-
