@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import type { MouseEvent } from 'react';
 import { places, getSteps } from './route';
-import type { Point, Step, Turn } from './route';
+import type { Step } from './route';
+import { NavigationMap } from './components/NavigationMap';
+import { Button } from './components/ui/Button';
+import { Combobox } from './components/ui/Combobox';
+import { Message } from './components/ui/Message';
 import './App.css';
 
-const W = 1948;
-const H = 1904;
-const ARROWS: Record<Turn, string> = { straight: '↑', left: '←', right: '→', around: '↩', arrive: '✓' };
-const dev = new URLSearchParams(location.search).has('dev');
 const names = Object.keys(places);
 
 export default function App() {
@@ -24,9 +23,10 @@ export default function App() {
 
   if (!steps) {
     return (
-      <main>
-        <h1>TechNav</h1>
-        <p id="scope" className="hint">First-floor prototype. Distances are estimates.</p>
+      <main className="planner">
+        <header className="planner-header">
+          <h1>TechNav</h1>
+        </header>
         <form className="route-form" onSubmit={(event) => {
           event.preventDefault();
           if (!a || !b || a === b) return;
@@ -38,26 +38,29 @@ export default function App() {
             setError(cause instanceof Error ? cause.message : 'Unable to plan this route. Choose another location.');
           }
         }}>
-        <label htmlFor="from">From</label>
-        <input id="from" list="places" value={from} placeholder="Room, e.g. A112" aria-describedby="scope validation" onChange={(e) => { setFrom(e.target.value); setError(''); }} />
-        <label htmlFor="to">To</label>
-        <input id="to" list="places" value={to} placeholder="Room, e.g. F125" aria-describedby="scope validation" onChange={(e) => { setTo(e.target.value); setError(''); }} />
-        <datalist id="places">
-          {names.map((n) => <option key={n} value={n} />)}
-        </datalist>
-        <p id="validation" className="hint" aria-live="polite">
+        <h2 className="form-title">Directions</h2>
+        <div className="route-fields">
+          <Combobox id="from" label="From" value={from} options={names}
+            placeholder="Search location" describedBy="validation" invalid={!!from.trim() && !a}
+            onChange={(value) => { setFrom(value); setError(''); }} />
+          <Combobox id="to" label="To" value={to} options={names}
+            placeholder="Search location" describedBy="validation" invalid={(!!to.trim() && !b) || (!!a && a === b)}
+            onChange={(value) => { setTo(value); setError(''); }} />
+        </div>
+        <Message id="validation" aria-live="polite">
           {(from.trim() && !a) || (to.trim() && !b)
-            ? 'Choose a listed first-floor location for both From and To.'
+            ? 'Choose a listed location for both From and To.'
             : a && a === b ? 'Choose a different destination.' : ''}
-        </p>
-        {error && <p role="alert" className="error">{error}</p>}
-        <button
+        </Message>
+        {error && <Message role="alert" tone="error">{error}</Message>}
+        <Button
           type="submit"
-          className="primary"
+          variant="primary"
+          className="route-submit"
           disabled={!a || !b || a === b}
         >
           Get Directions
-        </button>
+        </Button>
         </form>
       </main>
     );
@@ -66,61 +69,42 @@ export default function App() {
   const step = steps[i];
   const last = i === steps.length - 1;
 
-  // The whole route, so the map stays put while the steps change.
-  const route = [steps[0].pts[0], ...steps.flatMap((s) => s.pts.slice(1))];
-  const xs = route.map((p) => p[0]);
-  const ys = route.map((p) => p[1]);
-  const pad = 200;
-  const w = Math.max(Math.max(...xs) - Math.min(...xs) + 2 * pad, 700);
-  const h = Math.max(Math.max(...ys) - Math.min(...ys) + 2 * pad, 500);
-  const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
-  const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
-  const viewBox = dev ? `0 0 ${W} ${H}` : `${cx - w / 2} ${cy - h / 2} ${w} ${h}`;
-  const toPoints = (pts: Point[]) => pts.map((p) => p.join(',')).join(' ');
-  const dest = route[route.length - 1];
-  const you = last ? dest : step.pts[0];
-
-  // Add ?dev to the URL, then tap the map to log coordinates for new waypoints.
-  const logPoint = (e: MouseEvent<SVGSVGElement>) => {
-    if (!dev) return;
-    const svg = e.currentTarget;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return;
-    const p = svg.createSVGPoint();
-    p.x = e.clientX;
-    p.y = e.clientY;
-    const { x, y } = p.matrixTransform(ctm.inverse());
-    console.log(Math.round(x), Math.round(y));
-  };
-
   return (
-    <main>
-      <header>
-        <button onClick={() => setSteps(null)}>‹ {a} to {b}</button>
-        <span>Step {i + 1} of {steps.length}</span>
+    <main className="navigation">
+      <header className="navigation-header">
+        <Button variant="text" className="route-back" aria-label="Edit route" onClick={() => setSteps(null)}>
+          <img src="/icons/back.svg" width="24" height="24" alt="" />
+          <span className="route-endpoints"><span className="eyebrow">{a} →</span><strong>{b}</strong></span>
+        </Button>
       </header>
-      <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
-      <p className="hint">Distances are estimates. Use Next as you reach each step.</p>
-
-      <svg className="map" viewBox={viewBox} onClick={logPoint} role="img" aria-labelledby="map-title">
-        <title id="map-title">First-floor route from {a} to {b}</title>
-        <image href="/map.png" width={W} height={H} />
-        <polyline points={toPoints(route)} className="route" />
-        <polyline points={toPoints(step.pts)} className="path" />
-        <circle cx={you[0]} cy={you[1]} r="18" className="you" />
-        <circle cx={dest[0]} cy={dest[1]} r="22" className="goal" />
-      </svg>
-
+      <div className="route-progress">
+        <p className="eyebrow">Step {i + 1} of {steps.length}</p>
+        <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
+      </div>
+      <NavigationMap steps={steps} index={i} from={a!} to={b!} />
       <div className="card" aria-live="polite" aria-atomic="true">
-        <div className="arrow" aria-hidden="true">{ARROWS[step.turn]}</div>
-        <p>{step.text}</p>
+        <span className={`direction-icon direction-icon--${step.turn}`} aria-hidden="true">
+          {step.turn === 'arrive' ? <svg viewBox="0 0 32 32"><path d="m7 16 6 6L25 9" /></svg>
+            : step.turn === 'around' ? <svg viewBox="0 0 32 32"><path d="M23 25V13a8 8 0 0 0-16 0v9m-5-5 5 5 5-5" /></svg>
+              : <img src="/icons/straight.svg" width="32" height="32" alt="" />}
+        </span>
+        <div className="instruction">
+          <div>
+            <h2>{step.turn === 'arrive' ? 'You have arrived' : step.turn === 'left' ? 'Turn left'
+              : step.turn === 'right' ? 'Turn right' : step.turn === 'around' ? 'Turn around'
+                : step.text.startsWith('Exit ') ? `Exit ${a}` : step.text.startsWith('Leave ') ? step.text.split(' and ')[0] : 'Continue straight'}</h2>
+            <p>{step.turn === 'arrive' ? `${b} · ${step.text.split('. You')[0].replace(`${b} is `, '')}`
+              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}` : ''}</p>
+            <p className="eyebrow">Distances are estimates.</p>
+          </div>
+        </div>
       </div>
 
       <div className="nav">
-        <button disabled={i === 0} onClick={() => setI(i - 1)}>Back</button>
-        <button className="primary" onClick={() => (last ? setSteps(null) : setI(i + 1))}>
+        <Button disabled={i === 0} onClick={() => setI(i - 1)}>Back</Button>
+        <Button variant="primary" onClick={() => (last ? setSteps(null) : setI(i + 1))}>
           {last ? 'Done' : 'Next'}
-        </button>
+        </Button>
       </div>
     </main>
   );
