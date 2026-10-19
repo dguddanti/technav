@@ -56,7 +56,7 @@ const rel = (from: number, to: number) => (to - from + 4) % 4; // 0 ahead, 1 rig
 
 export function getSteps(from: string, to: string): Step[] {
   if (!Object.hasOwn(places, from) || !Object.hasOwn(places, to)) {
-    throw new Error('Choose a listed first-floor location for both From and To.');
+    throw new Error('Choose a listed location for both From and To.');
   }
   const [startNode, startDoor] = places[from];
   const [endNode, endDoor] = places[to];
