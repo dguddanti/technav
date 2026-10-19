@@ -48,6 +48,16 @@ export default function App() {
           <Combobox id="from" label="From" value={from} options={names}
             placeholder="Search location" describedBy="validation" invalid={!!from.trim() && !a}
             onChange={(value) => { setFrom(value); setError(''); }} />
+          <button type="button" className="swap" aria-label="Swap start and destination" onClick={() => {
+            setFrom(to);
+            setTo(from);
+            setError('');
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M7 4v16m-4-4 4 4 4-4M17 20V4m-4 4 4-4 4 4" />
+            </svg>
+            Swap
+          </button>
           <Combobox id="to" label="To" value={to} options={names}
             placeholder="Search location" describedBy="validation" invalid={(!!to.trim() && !b) || (!!a && a === b)}
             onChange={(value) => { setTo(value); setError(''); }} />
@@ -105,7 +115,8 @@ export default function App() {
                 : step.turn === 'up' || step.turn === 'down' ? step.text
                   : step.text.startsWith('Exit ') ? `Exit ${a}` : step.text.startsWith('Leave ') ? step.text.split(' and ')[0] : 'Continue straight'}</h2>
             <p>{step.turn === 'arrive' ? `${b} · ${step.text.split('. You')[0].replace(`${b} is `, '')}`
-              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}` : floorName(step.floor)}</p>
+              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}`
+                : step.text.includes('a short distance') ? 'A short distance' : floorName(step.floor)}</p>
             <p className="eyebrow">Distances are estimates.</p>
           </div>
         </div>

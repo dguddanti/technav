@@ -46,6 +46,8 @@ h1, h2, p { margin: 0; }
 .route-fields { display: flex; flex-direction: column; gap: 24px; }
 .ui-field { position: relative; min-width: 0; }
 .ui-field:focus-within { z-index: 2; }
+.swap { align-self: flex-end; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -16px 0; padding: 8px 4px; border: 0; background: transparent; color: var(--primary); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.swap:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 8px; }
 .ui-label, .eyebrow { color: var(--muted); font-size: 12px; font-weight: 500; line-height: 18px; letter-spacing: .1px; }
 .ui-label { display: block; margin-bottom: 8px; }
 .ui-combobox { width: 100%; }

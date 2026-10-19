@@ -20,6 +20,13 @@ describe('walking directions', () => {
     expect(points).toContainEqual([1216, 44]);
   });
 
+  it('does not announce the one-pixel corner between K132 and K134', () => {
+    const steps = getSteps('K132', 'K134');
+    expect(steps.map(step => step.turn)).toEqual(['straight', 'arrive']);
+    expect(steps[0].pts).toEqual([[1248, 45], [1216, 45], [1216, 44]]);
+    expect(steps[1].text).toBe('K134 is behind you. You have arrived.');
+  });
+
   it('reports distances as estimates', () => {
     const walking = getSteps('Main Entrance', 'F125').slice(0, -1);
     expect(walking.every(step => step.text.includes('about'))).toBe(true);
