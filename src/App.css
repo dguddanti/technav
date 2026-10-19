@@ -93,6 +93,8 @@ h1, h2, p { margin: 0; }
   clip-path: inset(50%);
   white-space: nowrap;
 }
+.route-option { display: flex; gap: 10px; align-items: center; min-height: 44px; margin-top: 16px; font-size: 13px; line-height: 20px; color: var(--muted); }
+.route-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary); flex-shrink: 0; }
 .ui-message { color: var(--muted); font-size: 12px; line-height: 18px; }
 .ui-message:empty { display: none; }
 .ui-message--error { color: #a32f47; }
@@ -139,6 +141,7 @@ h1, h2, p { margin: 0; }
 .direction-icon svg { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .direction-icon--left img { transform: rotate(-90deg); }
 .direction-icon--right img { transform: rotate(90deg); }
+.direction-icon--down img { transform: rotate(180deg); }
 .instruction { min-width: 0; }
 .instruction h2 { font-size: 22px; font-weight: 600; line-height: 30px; letter-spacing: -.55px; }
 .instruction p:not(.sr-only) { margin-top: 4px; font-size: 15px; line-height: 24px; letter-spacing: -.15px; }

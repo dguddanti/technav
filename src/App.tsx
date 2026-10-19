@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { places, getSteps } from './route';
 import type { Step } from './route';
+import { FLOORS, floorName } from './building';
 import { NavigationMap } from './components/NavigationMap';
 import { Button } from './components/ui/Button';
 import { Combobox } from './components/ui/Combobox';
@@ -15,6 +16,7 @@ export default function App() {
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [i, setI] = useState(0);
   const [error, setError] = useState('');
+  const [avoidStairs, setAvoidStairs] = useState(false);
 
   // Match what was typed to a place, ignoring case.
   const find = (s: string) => names.find((n) => n.toLowerCase() === s.trim().toLowerCase());
@@ -31,7 +33,10 @@ export default function App() {
           event.preventDefault();
           if (!a || !b || a === b) return;
           try {
-            setSteps(getSteps(a, b));
+            const planned = getSteps(a, b, { avoidStairs });
+            // Fetch this route's floor plans now so switching floors does not wait on them.
+            for (const f of FLOORS) if (planned.some((s) => s.floor === f.id)) new Image().src = f.image;
+            setSteps(planned);
             setI(0);
             setError('');
           } catch (cause) {
@@ -47,6 +52,11 @@ export default function App() {
             placeholder="Search location" describedBy="validation" invalid={(!!to.trim() && !b) || (!!a && a === b)}
             onChange={(value) => { setTo(value); setError(''); }} />
         </div>
+        <label className="route-option">
+          <input type="checkbox" checked={avoidStairs}
+            onChange={(e) => { setAvoidStairs(e.target.checked); setError(''); }} />
+          Step-free route (elevators only)
+        </label>
         <Message id="validation" aria-live="polite">
           {(from.trim() && !a) || (to.trim() && !b)
             ? 'Choose a listed location for both From and To.'
@@ -78,7 +88,7 @@ export default function App() {
         </Button>
       </header>
       <div className="route-progress">
-        <p className="eyebrow">Step {i + 1} of {steps.length}</p>
+        <p className="eyebrow">Step {i + 1} of {steps.length} · {floorName(step.floor)}</p>
         <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
       </div>
       <NavigationMap steps={steps} index={i} from={a!} to={b!} />
@@ -92,9 +102,10 @@ export default function App() {
           <div>
             <h2>{step.turn === 'arrive' ? 'You have arrived' : step.turn === 'left' ? 'Turn left'
               : step.turn === 'right' ? 'Turn right' : step.turn === 'around' ? 'Turn around'
-                : step.text.startsWith('Exit ') ? `Exit ${a}` : step.text.startsWith('Leave ') ? step.text.split(' and ')[0] : 'Continue straight'}</h2>
+                : step.turn === 'up' || step.turn === 'down' ? step.text
+                  : step.text.startsWith('Exit ') ? `Exit ${a}` : step.text.startsWith('Leave ') ? step.text.split(' and ')[0] : 'Continue straight'}</h2>
             <p>{step.turn === 'arrive' ? `${b} · ${step.text.split('. You')[0].replace(`${b} is `, '')}`
-              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}` : ''}</p>
+              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}` : floorName(step.floor)}</p>
             <p className="eyebrow">Distances are estimates.</p>
           </div>
         </div>
