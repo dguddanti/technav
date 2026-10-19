@@ -1,19 +1,31 @@
 import { describe, expect, it, vi } from 'vitest';
 import { getSteps } from './route';
 
-vi.mock('./map-data', () => ({
-  nodes: {
+// Every node on one floor, so these cover the walking instructions alone.
+vi.mock('./building', () => {
+  const nodes = {
     a: [0, 0], b: [100, 0], jitter: [100, 1], c: [200, 1],
     corner: [100, 24], d: [200, 24],
     x: [300, 300], y: [301, 300], z: [301, 301],
-  },
-  edges: [['a', 'b'], ['b', 'jitter'], ['jitter', 'c'], ['b', 'corner'], ['corner', 'd'], ['x', 'y'], ['y', 'z']],
-  places: {
+  };
+  const places = {
     Start: ['a', [0, 0]], InitialJitter: ['a', [0, 1]], End: ['c', [210, 1]],
     TrailingJitter: ['jitter', [110, 1]], RealCorner: ['d', [210, 24]],
     TinyStart: ['x', [300, 300]], TinyEnd: ['z', [301, 302]],
-  },
-}));
+  };
+  return {
+    nodes,
+    places,
+    edges: [['a', 'b'], ['b', 'jitter'], ['jitter', 'c'], ['b', 'corner'], ['corner', 'd'], ['x', 'y'], ['y', 'z']],
+    links: [],
+    floorOf: Object.fromEntries(Object.keys(nodes).map((n) => [n, '1'])),
+    placeFloor: Object.fromEntries(Object.keys(places).map((n) => [n, '1'])),
+    floorName: () => 'Floor 1',
+    floorLevel: () => 1,
+    STAIRS_COST: 150,
+    ELEVATOR_COST: 250,
+  };
+});
 
 describe('instruction noise', () => {
   it('keeps a one-pixel offset in a straight route without adding two turns', () => {

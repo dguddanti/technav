@@ -17,7 +17,7 @@ describe('route planning', () => {
     expect(screen.getByLabelText('To')).toHaveValue('Main Entrance');
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
-    expect(screen.getByRole('img', { name: 'First-floor route from F125 to Main Entrance' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Route from F125 to Main Entrance' })).toBeInTheDocument();
   });
 
   it('swaps blank and unsupported input exactly and can swap back', () => {
@@ -47,11 +47,10 @@ describe('route planning', () => {
     expect(screen.getByLabelText('From')).toHaveValue('F125');
   });
 
-  it('labels both inputs and explains the prototype scope', () => {
+  it('labels both inputs and disables directions until a destination is selected', () => {
     render(<App />);
     expect(screen.getByLabelText('From')).toHaveValue('Main Entrance');
     expect(screen.getByLabelText('To')).toHaveValue('');
-    expect(screen.getByText('First-floor prototype. Distances are estimates.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Get Directions' })).toBeDisabled();
   });
 
@@ -60,15 +59,16 @@ describe('route planning', () => {
     fireEvent.change(screen.getByLabelText('From'), { target: { value: ' a112 ' } });
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'f125' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Get Directions' }).closest('form')!);
-    expect(screen.getByRole('img', { name: 'First-floor route from A112 to F125' })).toBeInTheDocument();
-    expect(screen.getByText('Exit A112 and walk about 15 ft.')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Route from A112 to F125' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Exit A112' })).toBeInTheDocument();
+    expect(screen.getByText('About 15 ft')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
   it('explains unsupported locations and identical endpoints', () => {
     render(<App />);
-    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F225' } });
-    expect(screen.getByText('Choose a listed first-floor location for both From and To.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F925' } });
+    expect(screen.getByText('Choose a listed location for both From and To.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Get Directions' })).toBeDisabled();
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'Main Entrance' } });
     expect(screen.getByText('Choose a different destination.')).toBeInTheDocument();
@@ -84,7 +84,8 @@ describe('route planning', () => {
     for (let i = 0; i < 20 && screen.queryByRole('button', { name: 'Next' }); i++) {
       fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     }
-    expect(screen.getByText(/A112.*You have arrived/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'You have arrived' })).toBeInTheDocument();
+    expect(screen.getByText(/^A112 · /)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
     expect(screen.getByLabelText('To')).toHaveValue('A112');
     expect(screen.getByRole('button', { name: 'Get Directions' })).toBeEnabled();

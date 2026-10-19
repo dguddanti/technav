@@ -34,13 +34,13 @@ describe('walking directions', () => {
 
   it('returns only arrival when already at the destination', () => {
     expect(getSteps('A170A', 'A170A')).toEqual([
-      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]] },
+      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]], floor: '1' },
     ]);
   });
 
   it.each([['Unknown', 'A112'], ['A112', 'Unknown'], ['__proto__', 'A112']])(
     'rejects an unknown endpoint: %s to %s', (from, to) => {
-      expect(() => getSteps(from, to)).toThrow('Choose a listed first-floor location');
+      expect(() => getSteps(from, to)).toThrow('Choose a listed location');
     },
   );
 
