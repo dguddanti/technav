@@ -20,6 +20,13 @@ describe('walking directions', () => {
     expect(points).toContainEqual([1216, 44]);
   });
 
+  it('does not announce the one-pixel corner between K132 and K134', () => {
+    const steps = getSteps('K132', 'K134');
+    expect(steps.map(step => step.turn)).toEqual(['straight', 'arrive']);
+    expect(steps[0].pts).toEqual([[1248, 45], [1216, 45], [1216, 44]]);
+    expect(steps[1].text).toBe('K134 is behind you. You have arrived.');
+  });
+
   it('reports distances as estimates', () => {
     const walking = getSteps('Main Entrance', 'F125').slice(0, -1);
     expect(walking.every(step => step.text.includes('about'))).toBe(true);
@@ -27,13 +34,13 @@ describe('walking directions', () => {
 
   it('returns only arrival when already at the destination', () => {
     expect(getSteps('A170A', 'A170A')).toEqual([
-      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]] },
+      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]], floor: '1' },
     ]);
   });
 
   it.each([['Unknown', 'A112'], ['A112', 'Unknown'], ['__proto__', 'A112']])(
     'rejects an unknown endpoint: %s to %s', (from, to) => {
-      expect(() => getSteps(from, to)).toThrow('Choose a listed first-floor location');
+      expect(() => getSteps(from, to)).toThrow('Choose a listed location');
     },
   );
 
