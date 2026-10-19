@@ -15,6 +15,7 @@ export default function App() {
   const [to, setTo] = useState('');
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [i, setI] = useState(0);
+  const [error, setError] = useState('');
 
   // Match what was typed to a place, ignoring case.
   const find = (s: string) => names.find((n) => n.toLowerCase() === s.trim().toLowerCase());
@@ -25,20 +26,39 @@ export default function App() {
     return (
       <main>
         <h1>TechNav</h1>
-        <label>From</label>
-        <input list="places" value={from} placeholder="Room, e.g. A112" onChange={(e) => setFrom(e.target.value)} />
-        <label>To</label>
-        <input list="places" value={to} placeholder="Room, e.g. F125" onChange={(e) => setTo(e.target.value)} />
+        <p id="scope" className="hint">First-floor prototype. Distances are estimates.</p>
+        <form className="route-form" onSubmit={(event) => {
+          event.preventDefault();
+          if (!a || !b || a === b) return;
+          try {
+            setSteps(getSteps(a, b));
+            setI(0);
+            setError('');
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : 'Unable to plan this route. Choose another location.');
+          }
+        }}>
+        <label htmlFor="from">From</label>
+        <input id="from" list="places" value={from} placeholder="Room, e.g. A112" aria-describedby="scope validation" onChange={(e) => { setFrom(e.target.value); setError(''); }} />
+        <label htmlFor="to">To</label>
+        <input id="to" list="places" value={to} placeholder="Room, e.g. F125" aria-describedby="scope validation" onChange={(e) => { setTo(e.target.value); setError(''); }} />
         <datalist id="places">
           {names.map((n) => <option key={n} value={n} />)}
         </datalist>
+        <p id="validation" className="hint" aria-live="polite">
+          {(from.trim() && !a) || (to.trim() && !b)
+            ? 'Choose a listed first-floor location for both From and To.'
+            : a && a === b ? 'Choose a different destination.' : ''}
+        </p>
+        {error && <p role="alert" className="error">{error}</p>}
         <button
+          type="submit"
           className="primary"
           disabled={!a || !b || a === b}
-          onClick={() => { setSteps(getSteps(a!, b!)); setI(0); }}
         >
           Get Directions
         </button>
+        </form>
       </main>
     );
   }
@@ -47,7 +67,7 @@ export default function App() {
   const last = i === steps.length - 1;
 
   // The whole route, so the map stays put while the steps change.
-  const route = [steps[0].pts[0], ...steps.map((s) => s.pts[1])];
+  const route = [steps[0].pts[0], ...steps.flatMap((s) => s.pts.slice(1))];
   const xs = route.map((p) => p[0]);
   const ys = route.map((p) => p[1]);
   const pad = 200;
@@ -57,8 +77,8 @@ export default function App() {
   const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
   const viewBox = dev ? `0 0 ${W} ${H}` : `${cx - w / 2} ${cy - h / 2} ${w} ${h}`;
   const toPoints = (pts: Point[]) => pts.map((p) => p.join(',')).join(' ');
-  const you = step.pts[0];
   const dest = route[route.length - 1];
+  const you = last ? dest : step.pts[0];
 
   // Add ?dev to the URL, then tap the map to log coordinates for new waypoints.
   const logPoint = (e: MouseEvent<SVGSVGElement>) => {
@@ -79,9 +99,11 @@ export default function App() {
         <button onClick={() => setSteps(null)}>‹ {a} to {b}</button>
         <span>Step {i + 1} of {steps.length}</span>
       </header>
-      <div className="bar"><div style={{ width: `${((i + 1) / steps.length) * 100}%` }} /></div>
+      <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
+      <p className="hint">Distances are estimates. Use Next as you reach each step.</p>
 
-      <svg className="map" viewBox={viewBox} onClick={logPoint}>
+      <svg className="map" viewBox={viewBox} onClick={logPoint} role="img" aria-labelledby="map-title">
+        <title id="map-title">First-floor route from {a} to {b}</title>
         <image href="/map.png" width={W} height={H} />
         <polyline points={toPoints(route)} className="route" />
         <polyline points={toPoints(step.pts)} className="path" />
@@ -89,8 +111,8 @@ export default function App() {
         <circle cx={dest[0]} cy={dest[1]} r="22" className="goal" />
       </svg>
 
-      <div className="card">
-        <div className="arrow">{ARROWS[step.turn]}</div>
+      <div className="card" aria-live="polite" aria-atomic="true">
+        <div className="arrow" aria-hidden="true">{ARROWS[step.turn]}</div>
         <p>{step.text}</p>
       </div>
 
