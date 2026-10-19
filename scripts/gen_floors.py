@@ -27,12 +27,14 @@ W, H = 1948, 1904
 FLOORS = {
     # floor id: (image, room-number pattern)
     'B': ('public/maps/floor-B.png', r'([A-M])B(\d\d)([A-Z]?)'),
+    'G': ('public/maps/floor-G.png', r'([A-N])G(\d\d)([A-Z]?)'),
     '1': ('public/map.png', r'([A-M])1(\d\d)([A-Z]?)'),
     '2': ('public/maps/floor-2.png', r'([A-M])2(\d\d)([A-Z]?)'),
     '3': ('public/maps/floor-3.png', r'([A-M])3(\d\d)([A-Z]?)'),
     '4': ('public/maps/floor-4.png', r'([A-M])4(\d\d)([A-Z]?)'),
 }
 # The fourth-floor plan has two inset drawings of floor 5; ignore everything inside them.
+HALLS = {'B': '03', 'G': '01'}  # hallway number on the lettered floors
 IGNORE = {'4': [(1040, 2900, 1630, 3520), (3255, 1940, 3850, 2565)]}  # source pixels x0, y0, x1, y1
 
 
@@ -424,12 +426,10 @@ def read_rooms(floor, ocr, scale):
         t = clean_text(o['text'])
         if len(t) < 4:
             continue
-        t = t[0] + t[1] + fix_digits(t[2:4]) + t[4:] if floor == 'B' else t[0] + fix_digits(t[1:4]) + t[4:]
+        t = t[0] + t[1] + fix_digits(t[2:4]) + t[4:] if not floor.isdigit() else t[0] + fix_digits(t[1:4]) + t[4:]
         m = pattern.match(t)
-        if not m or m.group(2) == '00' and floor != 'B':
-            continue
-        if floor == 'B' and m.group(2) == '03':  # basement hallways are XB03A, XB03B...
-            continue
+        if not m or m.group(2) == HALLS.get(floor, '00'):
+            continue  # hallway names: X200A on numbered floors, XB03A in the basement, XG01A on ground
         c = ((o['x'] + o['w'] / 2) * scale[0], (o['y'] + o['h'] / 2) * scale[1])
         if any(x0 <= o['x'] <= x1 and y0 <= o['y'] <= y1 for x0, y0, x1, y1 in IGNORE.get(floor, [])):
             continue
@@ -550,7 +550,7 @@ def _point_mask(c):
     return m
 
 
-ORDER = ['B', '1', '2', '3', '4']
+ORDER = ['B', 'G', '1', '2', '3', '4']
 
 
 def link_shafts(data):
