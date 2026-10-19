@@ -27,7 +27,7 @@ describe('walking directions', () => {
 
   it('returns only arrival when already at the destination', () => {
     expect(getSteps('A170A', 'A170A')).toEqual([
-      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]] },
+      { turn: 'arrive', text: 'You are already at A170A.', pts: [places.A170A[1], places.A170A[1]], floor: '1' },
     ]);
   });
 
