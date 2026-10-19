@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { places, getSteps } from './route';
 import type { Point, Step, Turn } from './route';
@@ -16,6 +16,8 @@ export default function App() {
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [i, setI] = useState(0);
   const [error, setError] = useState('');
+  const [showOverview, setShowOverview] = useState(false);
+  const overviewToggle = useRef<HTMLButtonElement>(null);
 
   // Match what was typed to a place, ignoring case.
   const find = (s: string) => names.find((n) => n.toLowerCase() === s.trim().toLowerCase());
@@ -33,6 +35,7 @@ export default function App() {
           try {
             setSteps(getSteps(a, b));
             setI(0);
+            setShowOverview(false);
             setError('');
           } catch (cause) {
             setError(cause instanceof Error ? cause.message : 'Unable to plan this route. Choose another location.');
@@ -102,6 +105,43 @@ export default function App() {
       <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
       <p className="hint">Distances are estimates. Use Next as you reach each step.</p>
 
+      <button
+        ref={overviewToggle}
+        className="overview-toggle"
+        aria-expanded={showOverview}
+        aria-controls="route-content"
+        onClick={() => setShowOverview(!showOverview)}
+      >
+        {showOverview ? 'Back to map' : 'View all steps'}
+      </button>
+
+      <div id="route-content" className="route-content">
+      {showOverview ? (
+        <section className="overview" aria-labelledby="overview-title">
+          <h2 id="overview-title">All directions</h2>
+          <ol>
+            {steps.map((instruction, index) => (
+              <li key={index}>
+                <button
+                  className="overview-step"
+                  aria-label={`Step ${index + 1}: ${instruction.text}`}
+                  aria-current={index === i ? 'step' : undefined}
+                  onClick={() => {
+                    setI(index);
+                    setShowOverview(false);
+                    overviewToggle.current?.focus();
+                  }}
+                >
+                  <span className="step-number" aria-hidden="true">{index + 1}</span>
+                  <span>{instruction.text}</span>
+                  {index === i && <span className="current-step">Current</span>}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : (
+      <>
       <svg className="map" viewBox={viewBox} onClick={logPoint} role="img" aria-labelledby="map-title">
         <title id="map-title">First-floor route from {a} to {b}</title>
         <image href="/map.png" width={W} height={H} />
@@ -121,6 +161,9 @@ export default function App() {
         <button className="primary" onClick={() => (last ? setSteps(null) : setI(i + 1))}>
           {last ? 'Done' : 'Next'}
         </button>
+      </div>
+      </>
+      )}
       </div>
     </main>
   );
