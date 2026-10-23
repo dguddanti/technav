@@ -72,3 +72,10 @@
 .photo-attachment-actions { display: flex; gap: 10px; }
 .photo-attachment-actions button { min-height: 44px; padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: 10px; color: var(--primary); font: inherit; font-size: 13px; font-weight: 600; }
 .photo-attachment > p, .photo-filename { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.photo-spot--complete { fill: #d9ede4; stroke: #34745b; }
+.report-map-directions button:disabled { color: #918a99; background: #f3f2f4; cursor: not-allowed; }
+.report-map-directions .direction-captured { font-size: 11px; }
+.report-photo-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.report-photo-fieldset:disabled .photo-attachment { opacity: .5; }
+.report-coverage-status { color: var(--muted); font-size: 12px; line-height: 19px; }
+.report-coverage-status button { border: 0; background: none; color: var(--primary); padding: 10px 0; min-height: 44px; font: inherit; font-weight: 600; }

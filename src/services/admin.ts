@@ -1,3 +1,4 @@
+import { photoSlotId } from './photoCoverage';
 import { getReportClients } from './firebaseClients';
 import { submitReport } from './reports';
 import { validEntrance } from '../locations';
@@ -78,6 +79,10 @@ export const reviewReport = async (reportId: string, status: 'approved' | 'rejec
     if (status === 'approved' && report.kind === 'entrance') throw new Error('Use Save entrance to publish an entrance correction.');
     if (status === 'approved' && report.kind === 'photo') {
       if (!report.photo) throw new Error('This photo is missing.');
+      const slotRef = c.dbSdk.doc(c.db, 'photoCoverage', photoSlotId(report.photoStationId!, report.mapHeading!));
+      const slot = await transaction.get(slotRef);
+      if (slot.exists()) throw new Error('This direction already has an approved photo. Reject this duplicate report instead.');
+      transaction.set(slotRef, { photoStationId: report.photoStationId, mapHeading: report.mapHeading, floor: report.floor, reportId, mapVersion: 'tech-v1' });
       // The report remains immutable; publication is an atomic, separate record.
       transaction.set(c.dbSdk.doc(c.db, 'publishedPhotos', reportId), { floor: report.floor, x: report.x, y: report.y, photoStationId: report.photoStationId, mapHeading: report.mapHeading, photo: report.photo, mapVersion: 'tech-v1', updatedBy: c.auth.currentUser!.uid, updatedAt: c.dbSdk.serverTimestamp() });
     }

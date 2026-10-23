@@ -5,7 +5,7 @@ const production = process.argv.includes('--production');
 if (!production && !process.argv.includes('--emulator')) throw new Error('Choose --emulator or --production explicitly.');
 const project = production ? 'technav-db7a8' : 'demo-technav';
 const host = production ? 'https://firestore.googleapis.com' : 'http://127.0.0.1:8080';
-const authorization = production ? execFileSync('gcloud', ['auth', 'print-access-token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim() : 'owner';
+const authorization = production ? process.env.GOOGLE_OAUTH_ACCESS_TOKEN ?? execFileSync('gcloud', ['auth', 'print-access-token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim() : 'owner';
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
 const encode = (value) => value === null ? { nullValue: null } : typeof value === 'string' ? { stringValue: value } : typeof value === 'number' ? { doubleValue: value } : { mapValue: { fields: fields(value) } };
 const fields = (value) => Object.fromEntries(Object.entries(value).map(([key, item]) => [key, encode(item)]));

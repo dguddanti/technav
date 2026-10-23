@@ -38,7 +38,13 @@ when published updates are unavailable. Already-started routes retain their
 original step list; plan a new route to use newly published changes.
 
 Approving a photo creates a separate published record atomically with the review.
-Pending evidence is private. Published photo files become readable only when a
+Pending evidence is private. An approved photo reserves its station/direction
+in `photoCoverage`; new reports for that view are rejected before uploading and
+by Firestore rules. Photo publication and the unique reservation are atomic,
+so competing approvals cannot publish the same view twice. Other directions
+remain available. Fully photographed stations are green and excluded from the
+photo-spot options. Existing map/entrance issue reports remain available.
+Published photo files become readable only when a
 matching published record exists. Published photos are a capture dataset for a
 future walkthrough; the navigation screen does not yet display a 3D/photo viewer.
 Map issues are manually resolved/rejected; marking one resolved does not rewrite
@@ -98,12 +104,15 @@ can produce Firebase permission-denied log messages while the checks pass.
 ## Production activation
 
 Implementation and local validation do not activate new Firebase products.
-Production backend activation is incomplete. The deployment account
-(`hongjunho5400@gmail.com`) can enable APIs and deploy Hosting, but an IAM
-permission check confirmed it lacks `datastore.databases.create`. Creating the
-default database returned permission denied. Authentication configuration and
-the configured Storage bucket do not exist yet. A project owner must complete
-these prerequisites; Hosting deployment alone does not enable reporting/admin.
+Production Firestore is enabled (Standard edition, `nam5`) and Anonymous/Google
+Authentication providers are enabled. The three bootstrap administrators, 999
+photo stations, and 1843 hallway nodes have been registered. Existing published
+photo slots have been backfilled (there were no published production photos).
+
+Storage is still unavailable: the project has billing disabled and the configured
+bucket does not exist. Photo submissions/uploads remain unavailable until the
+project owner enables Blaze and initializes Storage. Text-only map reports and
+entrance corrections use Firestore and do not require Storage.
 
 1. In project `technav-db7a8`, enable Cloud Firestore and create the `(default)`
    database. Select a region deliberately (e.g. `us-central1`).
@@ -117,8 +126,12 @@ these prerequisites; Hosting deployment alone does not enable reporting/admin.
    `node scripts/seed-report-registry.mjs --production`. This writes the fixed
    station/node registries and bootstrap administrator; it does not modify
    published entrances, reports, or photos. Repeat only when intentionally
-   publishing a registry change. Credentials are never printed by the script.
-5. Deploy the default-deny rules: `firebase deploy --only firestore:rules,storage
+   publishing a registry change. Credentials are never printed by the script. Both registry scripts also accept
+   `GOOGLE_OAUTH_ACCESS_TOKEN` from a trusted deployment process instead of gcloud.
+5. Before deploying the duplicate-photo rules on an existing database, run
+   `node scripts/backfill-photo-coverage.mjs --production` to reserve views from
+   previously approved photos. This preserves all original photos. For local
+   data, use `--emulator`. Then deploy the default-deny rules: `firebase deploy --only firestore:rules,storage
    --project technav-db7a8`. Confirm cross-service Storage-to-Firestore rule
    permissions when Firebase requests them.
 6. Since admin previews use authenticated Storage byte reads rather than public

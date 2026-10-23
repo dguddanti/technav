@@ -17,6 +17,10 @@ service cloud.firestore {
       let station = get(/databases/$(database)/documents/photoStations/$(d.photoStationId)).data;
       return station.floor == d.floor && station.x == d.x && station.y == d.y && station.mapVersion == d.mapVersion;
     }
+    function photoSlot(d) { return d.photoStationId + '_' + string(d.mapHeading); }
+    function photoAvailable(d) {
+      return d.kind != 'photo' || !exists(/databases/$(database)/documents/photoCoverage/$(photoSlot(d)));
+    }
     function validBase(d) {
       return d.keys().hasOnly(['schemaVersion', 'mapVersion', 'authorId', 'kind', 'category', 'floor', 'x', 'y', 'placeName', 'hallwayNodeId', 'originalEntrance', 'photoStationId', 'mapHeading', 'description', 'context', 'status', 'photo', 'createdAt', 'submittedAt'])
         && d.keys().hasAll(['schemaVersion', 'mapVersion', 'authorId', 'kind', 'category', 'floor', 'x', 'y', 'placeName', 'hallwayNodeId', 'originalEntrance', 'photoStationId', 'mapHeading', 'description', 'context', 'status', 'photo', 'createdAt', 'submittedAt'])
@@ -34,12 +38,12 @@ service cloud.firestore {
         && photo.width is int && photo.height is int && photo.width > 0 && photo.height > 0 && photo.width <= 1600 && photo.height <= 1600);
     }
     match /reports/{id} {
-      allow create: if signedIn() && validBase(request.resource.data)
+      allow create: if signedIn() && validBase(request.resource.data) && photoAvailable(request.resource.data)
         && request.resource.data.status == 'uploading' && request.resource.data.photo == null
         && request.resource.data.createdAt == request.time && request.resource.data.submittedAt == null;
       allow read: if signedIn() && (resource.data.authorId == request.auth.uid || reviewer());
       allow update: if (signedIn() && resource.data.authorId == request.auth.uid
-        && resource.data.status == 'uploading' && validBase(request.resource.data)
+        && resource.data.status == 'uploading' && validBase(request.resource.data) && photoAvailable(request.resource.data)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'photo', 'submittedAt'])
         && request.resource.data.status == 'pending' && request.resource.data.submittedAt == request.time
         && validPhoto(request.resource.data.photo, id)
@@ -47,6 +51,8 @@ service cloud.firestore {
         || (reviewer() && resource.data.status == 'pending'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedAt', 'reviewNote', 'reviewedBy'])
           && request.resource.data.status in ['approved', 'rejected']
+          && (resource.data.kind != 'photo' || request.resource.data.status == 'rejected'
+            || getAfter(/databases/$(database)/documents/photoCoverage/$(photoSlot(resource.data))).data.reportId == id)
           && request.resource.data.reviewedBy == request.auth.uid && request.resource.data.reviewedAt == request.time
           && request.resource.data.reviewNote is string && request.resource.data.reviewNote.size() <= 1500);
       allow delete: if reviewer() || (signedIn() && resource.data.authorId == request.auth.uid && resource.data.status == 'uploading');
@@ -75,6 +81,7 @@ service cloud.firestore {
     match /publishedPhotos/{id} {
       allow read: if true;
       allow create: if reviewer()
+        && getAfter(/databases/$(database)/documents/photoCoverage/$(photoSlot(request.resource.data))).data.reportId == id
         && getAfter(/databases/$(database)/documents/reports/$(id)).data.status == 'approved'
         && get(/databases/$(database)/documents/reports/$(id)).data.kind == 'photo'
         && request.resource.data.keys().hasOnly(['floor', 'x', 'y', 'photoStationId', 'mapHeading', 'photo', 'mapVersion', 'updatedBy', 'updatedAt'])
@@ -85,6 +92,17 @@ service cloud.firestore {
         && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
       allow update: if false;
       allow delete: if reviewer();
+    }
+    match /photoCoverage/{slot} {
+      allow read: if true;
+      allow create: if reviewer()
+        && request.resource.data.keys().hasOnly(['photoStationId', 'mapHeading', 'floor', 'reportId', 'mapVersion'])
+        && slot == photoSlot(request.resource.data) && request.resource.data.mapVersion == 'tech-v1'
+        && request.resource.data.photoStationId == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.photoStationId
+        && request.resource.data.mapHeading == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.mapHeading
+        && request.resource.data.floor == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.floor;
+      allow update: if false;
+      allow delete: if reviewer() && !existsAfter(/databases/$(database)/documents/publishedPhotos/$(resource.data.reportId));
     }
     match /hallwayNodes/{id} { allow read: if true; allow write: if false; }
     match /photoStations/{id} { allow read: if true; allow write: if false; }

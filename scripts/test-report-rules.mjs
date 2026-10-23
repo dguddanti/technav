@@ -49,7 +49,8 @@ try {
   assert.equal((await getDoc(doc(other.db, 'publishedEntrances', 'test-only'))).data().x, 20);
   await denied(setDoc(doc(admin.db, 'publishedEntrances', 'invalid'), { name: 'Invalid', floor: '2', hallwayNodeId: hallway.id, x: 20, y: 20, mapVersion: 'tech-v1', updatedBy: admin.auth.currentUser.uid, updatedAt: serverTimestamp(), sourceReportId: null }), 'Cross-floor links cannot be published');
   const spots = await getDocs(collection(admin.db, 'photoStations'));
-  const spot = spots.docs.find((entry) => entry.data().floor === '1');
+  const used = new Set((await getDocs(collection(admin.db, 'photoCoverage'))).docs.map((entry) => entry.id));
+  const spot = spots.docs.find((entry) => entry.data().floor === '1' && !used.has(`${entry.id}_90`));
   const spotData = spot.data(); const photoId = `${id}-photo`;
   const specific = { ...data, kind: 'photo', category: null, description: '', x: spotData.x, y: spotData.y, photoStationId: spot.id, mapHeading: 90 };
   await denied(setDoc(doc(owner.db, 'reports', `${photoId}-invalid`), { ...specific, x: 0 }), 'Photo stations cannot be spoofed');
@@ -58,11 +59,29 @@ try {
   await uploadBytes(ref(owner.storage, approvedPath), new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), { contentType: 'image/jpeg' });
   const photo = { path: approvedPath, width: 1, height: 1 };
   await updateDoc(doc(owner.db, 'reports', photoId), { status: 'pending', submittedAt: serverTimestamp(), photo });
+  const competingId = `${photoId}-competing`;
+  await setDoc(doc(owner.db, 'reports', competingId), specific);
+  const competingPath = `report-photos/${owner.auth.currentUser.uid}/${competingId}/photo.jpg`;
+  await uploadBytes(ref(owner.storage, competingPath), new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), { contentType: 'image/jpeg' });
+  const competingPhoto = { path: competingPath, width: 1, height: 1 };
+  await updateDoc(doc(owner.db, 'reports', competingId), { status: 'pending', submittedAt: serverTimestamp(), photo: competingPhoto });
   await runTransaction(admin.db, async (transaction) => {
     await transaction.get(doc(admin.db, 'reports', photoId));
+    transaction.set(doc(admin.db, 'photoCoverage', `${spot.id}_90`), { floor: '1', photoStationId: spot.id, mapHeading: 90, reportId: photoId, mapVersion: 'tech-v1' });
     transaction.set(doc(admin.db, 'publishedPhotos', photoId), { floor: '1', x: spotData.x, y: spotData.y, photoStationId: spot.id, mapHeading: 90, photo, mapVersion: 'tech-v1', updatedBy: admin.auth.currentUser.uid, updatedAt: serverTimestamp() });
     transaction.update(doc(admin.db, 'reports', photoId), { status: 'approved', reviewedBy: admin.auth.currentUser.uid, reviewedAt: serverTimestamp(), reviewNote: '' });
   });
+  await denied(runTransaction(admin.db, async (transaction) => {
+    await transaction.get(doc(admin.db, 'reports', competingId));
+    transaction.set(doc(admin.db, 'photoCoverage', `${spot.id}_90`), { floor: '1', photoStationId: spot.id, mapHeading: 90, reportId: competingId, mapVersion: 'tech-v1' });
+    transaction.set(doc(admin.db, 'publishedPhotos', competingId), { floor: '1', x: spotData.x, y: spotData.y, photoStationId: spot.id, mapHeading: 90, photo: competingPhoto, mapVersion: 'tech-v1', updatedBy: admin.auth.currentUser.uid, updatedAt: serverTimestamp() });
+    transaction.update(doc(admin.db, 'reports', competingId), { status: 'approved', reviewedBy: admin.auth.currentUser.uid, reviewedAt: serverTimestamp(), reviewNote: '' });
+  }), 'Concurrent duplicate approvals are rejected atomically');
+  assert.equal((await getDoc(doc(admin.db, 'reports', competingId))).data().status, 'pending');
+  assert.equal((await getDoc(doc(admin.db, 'publishedPhotos', competingId))).exists(), false);
   assert.equal((await getBytes(ref(other.storage, approvedPath))).byteLength, 4);
+  await denied(setDoc(doc(owner.db, 'reports', `${photoId}-duplicate`), specific), 'Published station/direction cannot receive another photo report');
+  await setDoc(doc(owner.db, 'reports', `${photoId}-other-direction`), { ...specific, mapHeading: 0 });
+  await denied(updateDoc(doc(admin.db, 'photoCoverage', `${spot.id}_90`), { reportId: 'overwrite' }), 'Published photo slots cannot be overwritten');
   console.log('PASS: anonymous submission, private evidence, admin allowlist, approval, published photos, and route entrance rules.');
 } finally { await Promise.all(apps.map(deleteApp)); }

@@ -1,5 +1,6 @@
+import { watchPhotoCoverage } from '../services/photoCoverage';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminApp } from './AdminApp';
 import { watchAdminIdentity, watchReports } from '../services/admin';
 vi.mock('../services/admin', () => ({ watchAdminIdentity: vi.fn(), watchReports: vi.fn(), signInAdmin: vi.fn(), signOutAdmin: vi.fn(), addAdministrator: vi.fn(), saveEntrance: vi.fn(), addAdminPhoto: vi.fn() }));
@@ -28,3 +29,6 @@ describe('administrator access and navigation', () => {
     expect(screen.queryByRole('button', { name: /Change report type/ })).toBeNull();
   });
 });
+
+vi.mock('../services/photoCoverage', () => ({ watchPhotoCoverage: vi.fn() }));
+beforeEach(() => { vi.mocked(watchPhotoCoverage).mockImplementation((_floor, receive) => { receive({}); return () => {}; }); });

@@ -1,3 +1,4 @@
+import { assertPhotoSlotAvailable } from './photoCoverage';
 import { getReportClients } from './firebaseClients';
 import { photoStations } from '../data/photoStations';
 import { MAP_VERSION } from '../types/reports';
@@ -40,6 +41,7 @@ const sendReport = async (draft: ReportDraft): Promise<string> => {
   if (draft.kind === 'photo') {
     const station = photoStations.find((candidate) => candidate.id === draft.photoStationId);
     if (!station || station.floor !== draft.floor || station.point[0] !== draft.point![0] || station.point[1] !== draft.point![1]) throw new Error('Choose a photo spot on this floor.');
+    await assertPhotoSlotAvailable(station.id, draft.mapHeading!);
   }
   const image = draft.photo ? await prepareReportPhoto(draft.photo) : null;
   const c = await getReportClients();
@@ -68,6 +70,7 @@ const sendReport = async (draft: ReportDraft): Promise<string> => {
     });
     created = true;
     if (image) await c.storageSdk.uploadBytes(photoRef, image.blob, { contentType: 'image/jpeg' });
+    if (draft.kind === 'photo') await assertPhotoSlotAvailable(draft.photoStationId!, draft.mapHeading!);
     await c.dbSdk.updateDoc(ref, {
       status: 'pending', submittedAt: c.dbSdk.serverTimestamp(),
       photo: image ? { path: photoRef.fullPath, width: image.width, height: image.height } : null,

@@ -12,6 +12,8 @@ interface MapPickerProps {
   point: Point | null;
   center?: Point;
   heading?: MapHeading | null;
+  capturedHeadings?: Record<string, MapHeading[]>;
+  unavailableHeadings?: MapHeading[];
   onHeadingChange?: (heading: MapHeading) => void;
   connection?: Point;
   spots?: PhotoStation[];
@@ -21,7 +23,7 @@ interface MapPickerProps {
 }
 const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v));
 
-export const MapPicker = ({ readOnly = false, floor, point, center, heading, onHeadingChange, connection, spots, hallwayPoints, original, onPick }: MapPickerProps) => {
+export const MapPicker = ({ capturedHeadings = {}, unavailableHeadings = [], readOnly = false, floor, point, center, heading, onHeadingChange, connection, spots, hallwayPoints, original, onPick }: MapPickerProps) => {
   const svg = useRef<SVGSVGElement>(null);
   const [zoom, setZoom] = useState(center ? 2 : 1);
   const [focus, setFocus] = useState<Point>(center ?? [MAP_WIDTH / 2, MAP_HEIGHT / 2]);
@@ -84,12 +86,12 @@ export const MapPicker = ({ readOnly = false, floor, point, center, heading, onH
         <image href={FLOORS.find((f) => f.id === floor)!.image} width={MAP_WIDTH} height={MAP_HEIGHT} />
         {hallwayPoints?.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={radius} className="photo-spot" />)}
         {original && <circle cx={original[0]} cy={original[1]} r={radius * 1.6} className="report-original" />}
-        {spots?.map((spot) => <circle key={spot.id} cx={spot.point[0]} cy={spot.point[1]} r={radius} className="photo-spot" />)}
+        {spots?.map((spot) => <circle key={spot.id} cx={spot.point[0]} cy={spot.point[1]} r={radius} className={`photo-spot ${(capturedHeadings[spot.id]?.length ?? 0) === 4 ? 'photo-spot--complete' : ''}`} />)}
         {point && connection && <><line x1={point[0]} y1={point[1]} x2={connection[0]} y2={connection[1]} className="report-connection" /><circle cx={connection[0]} cy={connection[1]} r={radius * 1.2} className="report-hallway" /></>}
         {point && <circle cx={point[0]} cy={point[1]} r={radius * 1.5} className="report-pin" />}
         {point && ray && <g className="report-facing-arrow" transform={`translate(${point[0]} ${point[1]}) rotate(${heading ?? 0})`}><path d={`M 0 ${-140 / zoom} L ${-36 / zoom} ${-78 / zoom} L 0 ${-92 / zoom} L ${36 / zoom} ${-78 / zoom} Z`} /><line x1={0} y1={-26 / zoom} x2={0} y2={-106 / zoom} className="report-facing" /></g>}
       </svg>
-      {onHeadingChange && <><div className="report-camera-compass" aria-live="polite"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" /><path transform={`rotate(${heading ?? 0} 16 16)`} d="M16 6 23 22 16 19 9 22Z" /></svg><span>{heading === null || heading === undefined ? 'Camera direction' : `Facing ${({0:'up',90:'right',180:'down',270:'left'})[heading]}`}</span></div><div className="report-map-directions" role="group" aria-label="Photo direction">{([{value:0,label:'Up',arrow:'↑'},{value:90,label:'Right',arrow:'→'},{value:180,label:'Down',arrow:'↓'},{value:270,label:'Left',arrow:'←'}] as const).map((direction) => <button key={direction.value} type="button" aria-pressed={heading === direction.value} onClick={() => onHeadingChange(direction.value)}><span aria-hidden="true">{direction.arrow}</span>{direction.label}</button>)}</div></>}
+      {onHeadingChange && <><div className="report-camera-compass" aria-live="polite"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" /><path transform={`rotate(${heading ?? 0} 16 16)`} d="M16 6 23 22 16 19 9 22Z" /></svg><span>{heading === null || heading === undefined ? 'Camera direction' : `Facing ${({0:'up',90:'right',180:'down',270:'left'})[heading]}`}</span></div><div className="report-map-directions" role="group" aria-label="Photo direction">{([{value:0,label:'Up',arrow:'↑'},{value:90,label:'Right',arrow:'→'},{value:180,label:'Down',arrow:'↓'},{value:270,label:'Left',arrow:'←'}] as const).map((direction) => <button key={direction.value} type="button" aria-pressed={heading === direction.value} disabled={unavailableHeadings.includes(direction.value)} title={unavailableHeadings.includes(direction.value) ? 'Photo already available' : undefined} onClick={() => onHeadingChange(direction.value)}><span aria-hidden="true">{direction.arrow}</span>{direction.label}{unavailableHeadings.includes(direction.value) && <span className="direction-captured" aria-label="photo already available">✓</span>}</button>)}</div></>}
       <div className="map-zoom" aria-label="Map zoom">
         <button type="button" aria-label="Zoom in" disabled={zoom >= 6} onClick={() => setZoom((z) => Math.min(6, z + .5))}>+</button>
         <button type="button" aria-label="Zoom out" disabled={zoom <= 1} onClick={() => setZoom((z) => Math.max(1, z - .5))}>−</button>
