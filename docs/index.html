@@ -3,13 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TechNav: step-by-step indoor directions inside Northwestern's Tech building. What it is, why to use it, how to get it, and what data it collects.">
-<title>TechNav — Indoor directions for the Tech building</title>
+<meta name="description" content="TechNav: indoor directions for the Northwestern University Technological Institute. What it is, how to use it, and what data it collects.">
+<title>TechNav: Indoor directions for Tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
   :root {
     --primary: #4e2a84;
     --text: #24212a;
-    --muted: #5c5666;
+    --muted: #736e7d;
     --border: #e5e0ea;
     --soft: #f5f2f9;
   }
@@ -18,124 +21,162 @@
     margin: 0;
     background: #fff;
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     font-size: 17px;
     line-height: 1.65;
   }
-  .wrap { max-width: 42rem; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
-  header.masthead { margin-bottom: 2rem; }
-  .masthead svg { display: block; margin-bottom: 1.25rem; }
-  h1 { font-size: 2rem; line-height: 1.2; letter-spacing: -0.5px; margin: 0 0 0.5rem; }
-  h1 span { color: var(--primary); }
-  .lede { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.5rem; max-width: 34rem; }
-  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .wrap { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem 4rem; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .wordmark { font-weight: 800; font-size: 1.15rem; color: var(--primary); text-decoration: none; }
+  .topbar nav { display: flex; gap: 1.25rem; }
+  .topbar nav a { color: var(--text); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
+  .topbar nav a:hover { color: var(--primary); }
+  .eyebrow { margin: 0 0 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); }
+  h1 { margin: 0 0 1rem; font-size: 2.75rem; line-height: 1.12; letter-spacing: -1.2px; font-weight: 800; }
+  h1 .accent { color: var(--primary); }
+  .lede { margin: 0 0 1.75rem; font-size: 1.12rem; color: var(--muted); max-width: 34rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 3rem; }
   .actions a {
     display: inline-block;
-    padding: 0.65rem 1.25rem;
+    padding: 0.7rem 1.5rem;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     text-decoration: none;
   }
   .actions a.primary { background: var(--primary); color: #fff; }
   .actions a.secondary { border: 1px solid var(--border); color: var(--primary); }
+  figure.shot {
+    margin: 0 0 2.5rem;
+    background: var(--soft);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+  figure.shot video {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    background: #fff;
+    display: block;
+  }
   .notice {
     border: 1px solid var(--border);
     background: var(--soft);
     border-radius: 10px;
     padding: 1rem 1.25rem;
-    margin: 0 0 2.5rem;
+    margin: 0 0 3rem;
   }
   .notice strong { display: block; margin-bottom: 0.25rem; }
   .notice p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  section { margin-bottom: 2.5rem; }
-  h2 { font-size: 1.3rem; letter-spacing: -0.2px; margin: 0 0 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  section:first-of-type h2 { border-top: 0; padding-top: 0; }
+  section { margin-bottom: 2.75rem; }
+  .sec-head { display: flex; align-items: baseline; gap: 0.9rem; border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 0.9rem; }
+  .sec-num { font-weight: 800; font-size: 1rem; color: var(--primary); }
+  h2 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.3px; margin: 0; }
   p { margin: 0 0 1rem; }
-  ul, ol { margin: 0 0 1rem; padding-left: 1.4rem; }
-  li { margin-bottom: 0.4rem; }
-  li::marker { color: var(--primary); }
+  ul.body, ol.body { margin: 0 0 1rem; padding-left: 1.35rem; }
+  .body li { margin-bottom: 0.45rem; }
+  .body li::marker { color: var(--primary); font-weight: 700; }
   a { color: var(--primary); }
-  code {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.9em;
-    background: var(--soft);
-    padding: 0.1em 0.35em;
-    border-radius: 4px;
-  }
-  footer { padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+  .qr-row { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+  .qr-row img { width: 76px; height: 76px; border: 1px solid var(--border); border-radius: 8px; }
+  .qr-row p { margin: 0; color: var(--muted); font-size: 0.93rem; }
+  footer { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
   footer p { margin: 0 0 0.5rem; }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .wrap { padding-bottom: 3rem; }
+    .topbar { margin-bottom: 2.25rem; }
+    h1 { font-size: 2.1rem; letter-spacing: -0.8px; }
+    .lede { font-size: 1.02rem; }
+    .actions a { flex: 1 1 100%; text-align: center; }
+    figure.shot { padding: 1rem; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="masthead">
-    <svg width="72" height="48" viewBox="0 0 72 48" aria-hidden="true">
-      <polyline points="6,42 26,42 26,24 46,24 46,8 66,8" fill="none" stroke="#4e2a84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="6" cy="42" r="5" fill="#4e2a84"/>
-      <circle cx="66" cy="8" r="5" fill="none" stroke="#4e2a84" stroke-width="3"/>
-    </svg>
-    <h1>TechNav</h1>
-    <p class="lede">Step-by-step indoor directions inside Northwestern&rsquo;s Tech building &mdash; find any room without getting lost in the hallways.</p>
+  <header class="topbar">
+    <a class="wordmark" href="https://technav-db7a8.web.app">TechNav</a>
+    <nav aria-label="Project links">
+      <a href="https://technav-db7a8.web.app">Open the app</a>
+      <a href="https://github.com/dguddanti/technav">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <p class="eyebrow">Northwestern CS392 course project</p>
+    <h1>Indoor directions for <span class="accent">Tech.</span></h1>
+    <p class="lede">Step-by-step turns inside the Northwestern University Technological Institute, basement through fourth floor.</p>
     <div class="actions">
       <a class="primary" href="https://technav-db7a8.web.app">Open the app</a>
       <a class="secondary" href="https://github.com/dguddanti/technav">GitHub repository</a>
     </div>
-  </header>
 
-  <div class="notice" role="note">
-    <strong>Course prototype, not a maintained product.</strong>
-    <p>TechNav was built as a Northwestern computer science course project. It is a working prototype: it may have bugs, its maps and photos may be incomplete, and it may stop being maintained or taken offline after the quarter ends. Do not rely on it as your only way to find a room.</p>
-  </div>
+    <figure class="shot">
+      <video src="assets/how-it-works.mp4" poster="assets/video-poster.png" autoplay muted loop playsinline controls preload="metadata" aria-label="Short captioned video of the real app: searching A112, following the route, and reporting an issue"></video>
+    </figure>
+    <script>
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        var v = document.querySelector("figure.shot video");
+        if (v) { v.removeAttribute("autoplay"); v.pause(); }
+      }
+    </script>
 
-  <section aria-labelledby="what">
-    <h2 id="what">What it is</h2>
-    <p>TechNav gives turn-by-turn walking directions between rooms in the Tech building, from the basement through the fourth floor. It includes:</p>
-    <ul>
-      <li>Room search with step-by-step instructions and a live route map.</li>
-      <li>Hallway photos at fixed points along your route, where volunteers have contributed them.</li>
-      <li>Built-in reporting: flag a wrong route, correct a room entrance, or contribute a hallway photo. No account needed.</li>
-      <li>A separate admin workspace where authorized reviewers check submissions before anything goes public.</li>
-    </ul>
-  </section>
+    <div class="notice" role="note">
+      <strong>Prototype notice</strong>
+      <p>TechNav is a prototype built for Northwestern CS392. It may contain bugs. Maps and photos may be incomplete. It may not be maintained past the quarter.</p>
+    </div>
 
-  <section aria-labelledby="why">
-    <h2 id="why">Why you might want it</h2>
-    <p>The Tech building is famously confusing &mdash; split levels, long repetitive hallways, and room numbers that don&rsquo;t always sit where you&rsquo;d expect. If you have a class, meeting, or office hour in Tech and don&rsquo;t want to wander, TechNav tells you exactly where to turn. It runs in your phone browser, is free, and asks for nothing to get started.</p>
-  </section>
+    <section aria-labelledby="what">
+      <div class="sec-head"><span class="sec-num" aria-hidden="true">01</span><h2 id="what">What it is</h2></div>
+      <ul class="body">
+        <li>Room search with step-by-step instructions and a route map.</li>
+        <li>Hallway photos at fixed points along the route, where available.</li>
+        <li>Issue reporting: wrong routes, entrance corrections, and photo contributions.</li>
+        <li>Submissions are reviewed before anything is published.</li>
+      </ul>
+    </section>
 
-  <section aria-labelledby="how">
-    <h2 id="how">How to get it</h2>
-    <ol>
-      <li>On your phone, open <a href="https://technav-db7a8.web.app">technav-db7a8.web.app</a>. There is nothing to install.</li>
-      <li>Search for the room you&rsquo;re going to and pick a starting point.</li>
-      <li>Follow the steps. If something looks wrong, use the report button to tell us.</li>
-    </ol>
-    <p>The source code is public at <a href="https://github.com/dguddanti/technav">github.com/dguddanti/technav</a>.</p>
-  </section>
+    <section aria-labelledby="who">
+      <div class="sec-head"><span class="sec-num" aria-hidden="true">02</span><h2 id="who">Who it is for</h2></div>
+      <p>Anyone navigating the Northwestern University Technological Institute (Tech). The building has split levels and long hallways that are difficult to navigate on a first visit.</p>
+      <p>The app runs in a mobile browser. It is free. Nothing to install.</p>
+    </section>
 
-  <section aria-labelledby="privacy">
-    <h2 id="privacy">What information is collected</h2>
-    <p><strong>No account, no name, no email.</strong> The app signs you in with a random anonymous ID so your reports can be attributed without identifying you.</p>
-    <ul>
-      <li><strong>Reports you submit:</strong> the text you write, the floor and map pin you place, and route context (start, destination, step number) when you report from navigation.</li>
-      <li><strong>Photos you submit:</strong> resized to at most 1600&nbsp;px, re-encoded as JPEG, and stripped of their original metadata (including any location tags) before upload.</li>
-      <li><strong>Admin sign-in only:</strong> administrators log in with Google, so Google provides their verified email address to confirm they are on the access list. Regular users never see a login screen.</li>
-      <li><strong>Usage analytics:</strong> the production site uses Firebase Analytics to count aggregate usage. Development and test sessions are excluded.</li>
-    </ul>
-    <p><strong>The app never asks for your location.</strong> Every position in the app is a pin you tap on the floor plan &mdash; there is no GPS or live tracking.</p>
-    <h2>Who sees it besides the developers</h2>
-    <ul>
-      <li><strong>Authorized admins</strong> can read pending reports and their private photo evidence in order to review them. Admins are a short list of named team members; access can only be granted by an existing admin.</li>
-      <li><strong>Everyone using the app</strong> can see content once an admin approves it: published hallway photos appear in navigation, and published entrances update search and routes.</li>
-      <li><strong>Google/Firebase</strong> hosts the database, file storage, authentication, and analytics infrastructure, so submitted data passes through their services under their terms.</li>
-    </ul>
-    <p>Nothing is sold or shared with any other third party. Pending (unapproved) reports and photos stay private to developers and admins.</p>
-  </section>
+    <section aria-labelledby="how">
+      <div class="sec-head"><span class="sec-num" aria-hidden="true">03</span><h2 id="how">How to use it</h2></div>
+      <ol class="body">
+        <li>Open <a href="https://technav-db7a8.web.app">technav-db7a8.web.app</a> on a phone.</li>
+        <li>Search for a destination room and pick a starting point.</li>
+        <li>Follow the steps. Use the report button to flag errors.</li>
+      </ol>
+      <div class="qr-row">
+        <img src="assets/demo-qr.png" alt="QR code linking to the TechNav app" width="76" height="76">
+        <p>Scan to open the app on your phone.<br>Source code: <a href="https://github.com/dguddanti/technav">github.com/dguddanti/technav</a>.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="privacy">
+      <div class="sec-head"><span class="sec-num" aria-hidden="true">04</span><h2 id="privacy">Data collection</h2></div>
+      <p>The app collects:</p>
+      <ul class="body">
+        <li>Submitted reports: text, floor, map pin, and route context (start, destination, step).</li>
+        <li>Submitted photos: resized to 1600 px max, re-encoded as JPEG, original metadata removed.</li>
+        <li>Aggregate usage counts via Firebase Analytics on the production site.</li>
+      </ul>
+      <p>Authorized reviewers read reports to approve them. Approved photos and entrances become visible to all app users. Hosting, database, and authentication run on Google Firebase. Nothing is sold or shared with other third parties.</p>
+    </section>
+  </main>
 
   <footer>
-    <p>TechNav is a Northwestern CS course prototype. Content on this page was last updated in October&nbsp;2026.</p>
+    <p>TechNav is a Northwestern CS392 course prototype. Last updated October 2026.</p>
     <p><a href="https://technav-db7a8.web.app">Open the app</a> &middot; <a href="https://github.com/dguddanti/technav">GitHub</a></p>
   </footer>
 
