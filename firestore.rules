@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function verifiedGoogle() { return signedIn() && request.auth.token.get('email_verified', false) == true && request.auth.token.firebase.sign_in_provider == 'google.com'; }
+    function reviewer() { return verifiedGoogle() && exists(/databases/$(database)/documents/adminEmails/$(request.auth.token.email.lower())); }
+    function floor(value) { return value in ['B', 'G', '1', '2', '3', '4']; }
+    function nullableString(value, max) { return value == null || (value is string && value.size() <= max); }
+    function validContext(c) {
+      return c is map && c.keys().hasOnly(['floor', 'from', 'to', 'stepIndex', 'stepText'])
+        && c.keys().hasAll(['floor', 'from', 'to', 'stepIndex', 'stepText'])
+        && floor(c.floor) && nullableString(c.from, 100) && nullableString(c.to, 100)
+        && nullableString(c.stepText, 500)
+        && (c.stepIndex == null || (c.stepIndex is int && c.stepIndex >= 0 && c.stepIndex < 1000));
+    }
+    function stationMatches(d) {
+      let station = get(/databases/$(database)/documents/photoStations/$(d.photoStationId)).data;
+      return station.floor == d.floor && station.x == d.x && station.y == d.y && station.mapVersion == d.mapVersion;
+    }
+    function photoSlot(d) { return d.photoStationId + '_' + string(d.mapHeading); }
+    function photoAvailable(d) {
+      return d.kind != 'photo' || !exists(/databases/$(database)/documents/photoCoverage/$(photoSlot(d)));
+    }
+    function validBase(d) {
+      return d.keys().hasOnly(['schemaVersion', 'mapVersion', 'authorId', 'kind', 'category', 'floor', 'x', 'y', 'placeName', 'hallwayNodeId', 'originalEntrance', 'photoStationId', 'mapHeading', 'description', 'context', 'status', 'photo', 'createdAt', 'submittedAt'])
+        && d.keys().hasAll(['schemaVersion', 'mapVersion', 'authorId', 'kind', 'category', 'floor', 'x', 'y', 'placeName', 'hallwayNodeId', 'originalEntrance', 'photoStationId', 'mapHeading', 'description', 'context', 'status', 'photo', 'createdAt', 'submittedAt'])
+        && d.schemaVersion == 1 && d.mapVersion == 'tech-v1'
+        && d.authorId == request.auth.uid && floor(d.floor)
+        && d.x is number && d.y is number && d.x >= 0 && d.x <= 1948 && d.y >= 0 && d.y <= 1904
+        && d.description is string && d.description.size() <= 1500 && validContext(d.context)
+        && ((d.kind == 'map' && d.category in ['wrong_route', 'blocked_path', 'incorrect_label', 'other'] && d.description.size() > 0 && d.placeName == null && d.hallwayNodeId == null && d.originalEntrance == null && d.photoStationId == null && d.mapHeading == null)
+          || (d.kind == 'entrance' && d.category == null && d.placeName is string && d.placeName.size() > 0 && d.placeName.size() <= 100 && d.hallwayNodeId is string && d.hallwayNodeId.size() <= 100 && d.originalEntrance is map && d.originalEntrance.keys().hasOnly(['x', 'y']) && d.originalEntrance.x is number && d.originalEntrance.y is number && d.photoStationId == null && d.mapHeading == null)
+          || (d.kind == 'photo' && d.category == null && d.placeName == null && d.hallwayNodeId == null && d.originalEntrance == null && d.photoStationId is string && d.photoStationId.matches('tech-v1-[BG1234]-.+') && d.photoStationId.size() <= 120 && d.mapHeading in [0, 90, 180, 270] && stationMatches(d)));
+    }
+    function validPhoto(photo, id) {
+      return photo == null || (photo is map && photo.keys().hasOnly(['path', 'width', 'height'])
+        && photo.path == 'report-photos/' + request.auth.uid + '/' + id + '/photo.jpg'
+        && photo.width is int && photo.height is int && photo.width > 0 && photo.height > 0 && photo.width <= 1600 && photo.height <= 1600);
+    }
+    match /reports/{id} {
+      allow create: if signedIn() && validBase(request.resource.data) && photoAvailable(request.resource.data)
+        && request.resource.data.status == 'uploading' && request.resource.data.photo == null
+        && request.resource.data.createdAt == request.time && request.resource.data.submittedAt == null;
+      allow read: if signedIn() && (resource.data.authorId == request.auth.uid || reviewer());
+      allow update: if (signedIn() && resource.data.authorId == request.auth.uid
+        && resource.data.status == 'uploading' && validBase(request.resource.data) && photoAvailable(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'photo', 'submittedAt'])
+        && request.resource.data.status == 'pending' && request.resource.data.submittedAt == request.time
+        && validPhoto(request.resource.data.photo, id)
+        && (request.resource.data.kind != 'photo' || request.resource.data.photo != null))
+        || (reviewer() && resource.data.status == 'pending'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedAt', 'reviewNote', 'reviewedBy'])
+          && request.resource.data.status in ['approved', 'rejected']
+          && (resource.data.kind != 'photo' || request.resource.data.status == 'rejected'
+            || getAfter(/databases/$(database)/documents/photoCoverage/$(photoSlot(resource.data))).data.reportId == id)
+          && request.resource.data.reviewedBy == request.auth.uid && request.resource.data.reviewedAt == request.time
+          && request.resource.data.reviewNote is string && request.resource.data.reviewNote.size() <= 1500);
+      allow delete: if reviewer() || (signedIn() && resource.data.authorId == request.auth.uid && resource.data.status == 'uploading');
+    }
+    match /adminEmails/{email} {
+      allow get: if verifiedGoogle() && (email == request.auth.token.email.lower() || reviewer());
+      allow list: if reviewer();
+      allow create: if reviewer() && request.resource.data.keys().hasOnly(['email', 'addedAt', 'addedBy'])
+        && request.resource.data.email == email && request.resource.data.addedAt == request.time && request.resource.data.addedBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+    function validEntrance(d) {
+      let node = get(/databases/$(database)/documents/hallwayNodes/$(d.hallwayNodeId)).data;
+      return d.keys().hasOnly(['name', 'floor', 'hallwayNodeId', 'x', 'y', 'mapVersion', 'sourceReportId', 'updatedBy', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 100
+        && !(d.name in ['__proto__', 'constructor', 'prototype']) && floor(d.floor)
+        && d.x is number && d.x >= 0 && d.x <= 1948 && d.y is number && d.y >= 0 && d.y <= 1904
+        && node.floor == d.floor && node.mapVersion == 'tech-v1' && d.mapVersion == 'tech-v1'
+        && d.updatedBy == request.auth.uid && d.updatedAt == request.time && nullableString(d.sourceReportId, 100);
+    }
+    match /publishedEntrances/{id} {
+      allow read: if true;
+      allow create, update: if reviewer() && validEntrance(request.resource.data);
+      allow delete: if reviewer();
+    }
+    match /publishedPhotos/{id} {
+      allow read: if true;
+      allow create: if reviewer()
+        && getAfter(/databases/$(database)/documents/photoCoverage/$(photoSlot(request.resource.data))).data.reportId == id
+        && getAfter(/databases/$(database)/documents/reports/$(id)).data.status == 'approved'
+        && get(/databases/$(database)/documents/reports/$(id)).data.kind == 'photo'
+        && request.resource.data.keys().hasOnly(['floor', 'x', 'y', 'photoStationId', 'mapHeading', 'photo', 'mapVersion', 'updatedBy', 'updatedAt'])
+        && request.resource.data.photo == get(/databases/$(database)/documents/reports/$(id)).data.photo
+        && request.resource.data.photoStationId == get(/databases/$(database)/documents/reports/$(id)).data.photoStationId
+        && request.resource.data.mapHeading == get(/databases/$(database)/documents/reports/$(id)).data.mapHeading
+        && request.resource.data.mapVersion == 'tech-v1' && stationMatches(request.resource.data)
+        && request.resource.data.updatedBy == request.auth.uid && request.resource.data.updatedAt == request.time;
+      allow update: if false;
+      allow delete: if reviewer();
+    }
+    match /photoCoverage/{slot} {
+      allow read: if true;
+      allow create: if reviewer()
+        && request.resource.data.keys().hasOnly(['photoStationId', 'mapHeading', 'floor', 'reportId', 'mapVersion'])
+        && slot == photoSlot(request.resource.data) && request.resource.data.mapVersion == 'tech-v1'
+        && request.resource.data.photoStationId == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.photoStationId
+        && request.resource.data.mapHeading == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.mapHeading
+        && request.resource.data.floor == getAfter(/databases/$(database)/documents/publishedPhotos/$(request.resource.data.reportId)).data.floor;
+      allow update: if false;
+      allow delete: if reviewer() && !existsAfter(/databases/$(database)/documents/publishedPhotos/$(resource.data.reportId));
+    }
+    match /hallwayNodes/{id} { allow read: if true; allow write: if false; }
+    match /photoStations/{id} { allow read: if true; allow write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

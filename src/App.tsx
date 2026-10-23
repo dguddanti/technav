@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState, useSyncExternalStore } from 'react';
 import { places, getSteps } from './route';
 import type { Step } from './route';
 import { FLOORS, floorName } from './building';
@@ -6,16 +6,24 @@ import { NavigationMap } from './components/NavigationMap';
 import { Button } from './components/ui/Button';
 import { Combobox } from './components/ui/Combobox';
 import { Message } from './components/ui/Message';
+const ReportDialog = lazy(() => import('./reports/ReportDialog').then((module) => ({ default: module.ReportDialog })));
+
+import type { ReportContext } from './types/reports';
 import './App.css';
 
-const names = Object.keys(places);
+import { placeFloor, locationRevision, subscribeLocations } from './locations';
+
+const ReportButton = ({ onClick }: { onClick: () => void }) => <button type="button" className="report-trigger" aria-label="Report an issue" onClick={onClick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0" /></svg><span>Report</span></button>;
 
 export default function App() {
+  useSyncExternalStore(subscribeLocations, locationRevision);
+  const names = Object.keys(places);
   const [from, setFrom] = useState('Main Entrance');
   const [to, setTo] = useState('');
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [i, setI] = useState(0);
   const [error, setError] = useState('');
+  const [reportContext, setReportContext] = useState<ReportContext | null>(null);
   const [avoidStairs, setAvoidStairs] = useState(false);
   const [showOverview, setShowOverview] = useState(false);
   const overviewToggle = useRef<HTMLButtonElement>(null);
@@ -27,9 +35,10 @@ export default function App() {
 
   if (!steps) {
     return (
-      <main className="planner">
+      <><main className="planner">
         <header className="planner-header">
           <h1>TechNav</h1>
+          <ReportButton onClick={() => setReportContext({ floor: a ? placeFloor[a] : '1', point: a ? places[a][1] : undefined })} />
         </header>
         <form className="route-form" onSubmit={(event) => {
           event.preventDefault();
@@ -75,7 +84,7 @@ export default function App() {
           Get Directions
         </Button>
         </form>
-      </main>
+      </main>{reportContext && <Suspense fallback={null}><ReportDialog context={reportContext} onClose={() => setReportContext(null)} /></Suspense>}</>
     );
   }
 
@@ -83,12 +92,13 @@ export default function App() {
   const last = i === steps.length - 1;
 
   return (
-    <main className="navigation">
+    <><main className="navigation">
       <header className="navigation-header">
         <Button variant="text" className="route-back" aria-label="Edit route" onClick={() => setSteps(null)}>
           <img src="/icons/back.svg" width="24" height="24" alt="" />
           <span className="route-endpoints"><span className="eyebrow">{a} →</span><strong>{b}</strong></span>
         </Button>
+        <ReportButton onClick={() => setReportContext({ floor: step.floor, point: step.turn === 'up' || step.turn === 'down' ? step.pts.at(-1)! : step.pts[0], from: a, to: b, stepIndex: i, stepText: step.text })} />
       </header>
       <div className="route-progress">
         <p className="eyebrow">Step {i + 1} of {steps.length} · {floorName(step.floor)}</p>
@@ -163,6 +173,6 @@ export default function App() {
       </>
       )}
       </div>
-    </main>
+    </main>{reportContext && <Suspense fallback={null}><ReportDialog context={reportContext} onClose={() => setReportContext(null)} /></Suspense>}</>
   );
 }

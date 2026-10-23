@@ -1,0 +1,81 @@
+.report-dialog { position: fixed; inset: 0; margin: auto; padding: 0; border: 0; width: 100%; max-width: 520px; height: 100dvh; max-height: 100dvh; background: #fff; color: var(--text); }
+.report-dialog::backdrop { background: #24172c66; }
+.report-shell, .report-form { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.report-form { flex: 1; }
+.report-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: max(20px, env(safe-area-inset-top)) 24px 16px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
+.report-header h2 { font-size: 22px; font-weight: 600; letter-spacing: -.6px; }
+.report-close { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--soft); font-size: 28px; font-weight: 400; }
+.report-body { display: flex; flex-direction: column; gap: 22px; border: 0; margin: 0; padding: 24px; overflow-y: auto; flex: 1; min-height: 0; overscroll-behavior: contain; }
+.report-kinds, .report-map-target { display: flex; padding: 4px; gap: 4px; border-radius: 14px; background: var(--soft); }
+.report-kinds button, .report-map-target button { flex: 1; min-height: 44px; padding: 8px; border: 0; background: transparent; color: var(--muted); border-radius: 10px; font-size: 14px; font-weight: 600; }
+.report-kinds [aria-pressed='true'], .report-map-target [aria-pressed='true'] { background: #fff; color: var(--primary); box-shadow: 0 1px 4px #381f5912; }
+.report-label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 20px; font-weight: 500; color: var(--muted); }
+.report-label select, .report-label textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: #fff; font: inherit; font-size: 16px; line-height: 24px; color: var(--text); }
+.report-label textarea { resize: vertical; min-height: 96px; }
+.report-label input[type='file'] { width: 100%; padding: 12px; border-radius: 12px; background: var(--soft); color: var(--text); font-size: 13px; }
+.report-label input::file-selector-button { padding: 9px 12px; margin-right: 10px; border: 0; border-radius: 8px; background: #fff; color: var(--primary); font: inherit; font-weight: 600; }
+.report-floors, .report-directions { display: flex; gap: 6px; }
+.report-floors button, .report-directions button { flex: 1; min-width: 0; min-height: 44px; padding: 8px 2px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--text); font: inherit; font-size: 14px; }
+.report-floors [aria-pressed='true'], .report-directions [aria-pressed='true'] { color: var(--primary); background: var(--soft); border-color: var(--primary); }
+.report-directions button { display: flex; flex-direction: column; gap: 3px; align-items: center; font-size: 12px; }
+.report-directions span { font-size: 24px; line-height: 26px; }
+.report-location { display: flex; flex-direction: column; gap: 10px; }
+.report-map-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.report-map-heading h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.report-map-heading > span { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+.report-map-wrap { position: relative; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--soft); }
+.report-map { display: block; width: 100%; height: clamp(240px, 38dvh, 340px); touch-action: none; cursor: crosshair; }
+.report-map:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+.photo-spot { fill: #fff; stroke: var(--primary); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.report-pin { fill: var(--primary); stroke: #fff; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.report-hallway { fill: #3684e8; stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.report-original { fill: #fff8; stroke: #554c60; stroke-dasharray: 4 3; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.report-facing { stroke: var(--primary); stroke-width: 4; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.report-connection { stroke: #3684e8; stroke-width: 2; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.map-zoom { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px #24172c18; }
+.map-zoom button { display: block; width: 44px; height: 44px; border: 0; background: #fff; color: var(--primary); font-size: 24px; }
+.map-zoom button + button { border-top: 1px solid var(--border); }
+.report-help, .report-context { font-size: 12px; font-weight: 400; line-height: 18px; color: var(--muted); }
+.report-context { padding: 10px 12px; border-radius: 10px; background: var(--soft); overflow-wrap: anywhere; }
+.report-actions { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; padding: 14px 24px max(20px, env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: #fff; }
+.report-actions .ui-message { font-size: 13px; }
+.report-photo-preview { display: flex; flex-direction: column; gap: 8px; align-items: start; }
+.report-photo-preview img { width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--border); border-radius: 12px; }
+.report-photo-preview button { padding: 10px 0; border: 0; background: transparent; color: var(--primary); font-size: 13px; }
+.report-confirmation { flex: 1; padding: 40px 28px; display: flex; justify-content: center; align-items: flex-start; flex-direction: column; gap: 16px; }
+.report-confirmation svg { width: 48px; height: 48px; fill: none; stroke: var(--primary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.report-confirmation h3 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -.5px; }
+.report-confirmation p { color: var(--muted); font-size: 15px; line-height: 24px; }
+@media (min-width: 640px) { .report-dialog { height: calc(100dvh - 48px); max-height: 920px; border-radius: 20px; } }
+.report-type-chooser { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.report-type-chooser > p { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.report-type-chooser button { display: flex; align-items: center; gap: 14px; text-align: left; width: 100%; padding: 20px 16px; border: 1px solid var(--border); background: #fff; border-radius: 16px; color: var(--text); }
+.report-type-chooser button:hover { border-color: var(--primary); background: var(--soft); }
+.report-type-chooser button > span:nth-child(2) { flex: 1; }
+.report-type-chooser strong { display: block; font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+.report-type-chooser small { display: block; color: var(--muted); font-size: 12px; line-height: 19px; }
+.report-type-symbol { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--soft); color: var(--primary); font-size: 25px; flex-shrink: 0; }
+.report-change-type { align-self: flex-start; padding: 8px 0; border: 0; background: none; color: var(--primary); font: inherit; font-size: 13px; }
+.report-map-wrap[data-directions='true'] .report-map { height: clamp(290px, 43dvh, 380px); }
+.report-facing-arrow { fill: var(--primary); stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.report-camera-compass { position: absolute; left: 10px; top: 10px; display: flex; align-items: center; gap: 6px; padding: 6px 9px 6px 6px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--primary); font-size: 11px; box-shadow: 0 2px 8px #24172c12; pointer-events: none; }
+.report-camera-compass svg { width: 30px; height: 30px; }
+.report-camera-compass circle { fill: var(--soft); stroke: var(--border); }
+.report-camera-compass path { fill: var(--primary); }
+.report-map-directions { display: flex; gap: 4px; position: absolute; bottom: 10px; left: 10px; right: 10px; padding: 4px; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 2px 8px #24172c12; }
+.report-map-directions button { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; border: 0; border-radius: 8px; background: #fff; color: var(--muted); font: inherit; font-size: 12px; }
+.report-map-directions button[aria-pressed='true'] { background: var(--soft); color: var(--primary); font-weight: 600; }
+.report-map-directions button > span { font-size: 22px; }
+.report-map-directions button:focus-visible { outline-offset: -2px; }
+.photo-attachment { padding: 20px; border: 1px dashed #d1c5e1; border-radius: 14px; background: #faf8fc; display: flex; align-items: center; flex-direction: column; gap: 12px; }
+.photo-attachment > svg { width: 28px; height: 28px; fill: none; stroke: var(--primary); stroke-width: 1.5; stroke-linejoin: round; }
+.photo-attachment-actions { display: flex; gap: 10px; }
+.photo-attachment-actions button { min-height: 44px; padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: 10px; color: var(--primary); font: inherit; font-size: 13px; font-weight: 600; }
+.photo-attachment > p, .photo-filename { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.photo-spot--complete { fill: #d9ede4; stroke: #34745b; }
+.report-map-directions button:disabled { color: #918a99; background: #f3f2f4; cursor: not-allowed; }
+.report-map-directions .direction-captured { font-size: 11px; }
+.report-photo-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.report-photo-fieldset:disabled .photo-attachment { opacity: .5; }
+.report-coverage-status { color: var(--muted); font-size: 12px; line-height: 19px; }
+.report-coverage-status button { border: 0; background: none; color: var(--primary); padding: 10px 0; min-height: 44px; font: inherit; font-weight: 600; }

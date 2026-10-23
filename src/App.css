@@ -171,3 +171,9 @@ h1, h2, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
 }
+
+.planner-header, .navigation-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.report-trigger { display: inline-flex; justify-content: center; align-items: center; min-width: 44px; min-height: 44px; gap: 6px; padding: 8px 0 8px 8px; background: none; border: 0; color: var(--muted); font: inherit; font-size: 12px; flex-shrink: 0; }
+.report-trigger:hover { color: var(--primary); }
+.report-trigger svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.navigation-header .route-back { min-width: 0; }

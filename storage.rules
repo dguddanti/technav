@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function reviewer() { return request.auth != null && request.auth.token.get('email_verified', false) == true && request.auth.token.firebase.sign_in_provider == 'google.com' && firestore.exists(/databases/(default)/documents/adminEmails/$(request.auth.token.email.lower())); }
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function uploading(uid, reportId) {
+      let report = firestore.get(/databases/(default)/documents/reports/$(reportId));
+      return report.data.authorId == uid && report.data.status == 'uploading';
+    }
+    match /report-photos/{uid}/{reportId}/photo.jpg {
+      allow read: if owner(uid) || reviewer() || (firestore.exists(/databases/(default)/documents/publishedPhotos/$(reportId)) && firestore.get(/databases/(default)/documents/publishedPhotos/$(reportId)).data.photo.path == 'report-photos/' + uid + '/' + reportId + '/photo.jpg');
+      allow create: if owner(uid) && uploading(uid, reportId)
+        && request.resource.size > 0 && request.resource.size <= 2 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      allow delete: if reviewer() || (owner(uid) && uploading(uid, reportId));
+      allow update: if false;
+    }
+    match /{path=**} { allow read, write: if false; }
+  }
+}

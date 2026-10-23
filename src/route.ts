@@ -1,4 +1,5 @@
-import { nodes, edges, places, links, floorOf, placeFloor, floorName, floorLevel, STAIRS_COST, ELEVATOR_COST } from './building';
+import { places, placeFloor } from './locations';
+import { nodes, edges, links, floorOf, floorName, floorLevel, STAIRS_COST, ELEVATOR_COST } from './building';
 import type { Floor } from './building';
 
 export { places };
