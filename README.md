@@ -69,6 +69,30 @@ your-app-name
 ├── vite.config.ts
 ```
 
+## Analytics
+
+Firebase Analytics uses the existing npm SDK and the `technav-db7a8` web app
+(measurement ID `G-V35FLZGGQ8`). Initialization lives in `src/services/firebase.ts`
+and runs once from the application entry point. Do not add a second Analytics
+script to `index.html`.
+
+Collection is enabled only in production builds (`npm run build`, including
+`npm run preview`), not the Vite development server or unit tests. Unsupported
+browsers and initialization failures leave the app usable. This setup enables
+the SDK's default collection; route searches, navigation steps, and arrivals do
+not yet have custom events.
+
+After deployment, open the public app and check the linked Google Analytics
+property's Realtime report to verify live collection.
+
+## Reports and administration
+
+The mobile app now includes typed reports, fixed-position photo contributions,
+and an administrator workspace at `/admin`. See
+[reporting and admin setup](docs/reporting-and-admin.md) for local emulators,
+security validation, deployment prerequisites, and current scope. New Firebase
+products must be activated before production submissions work.
+
 ## Credits
 
 Inspired by [SafdarJamal/vite-template-react](https://github.com/SafdarJamal/vite-template-react).
