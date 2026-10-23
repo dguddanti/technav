@@ -28,8 +28,10 @@ const kinds: { id: ReportKind; label: string; detail: string }[] = [
 
 export const ReportDialog = ({ context, adminPhoto = false, onClose }: ReportDialogProps) => {
   const dialog = useRef<HTMLDialogElement>(null);
-  const [draft, setDraft] = useState<ReportDraft>({ kind: adminPhoto ? 'photo' : 'map', category: 'wrong_route', floor: context.floor, point: context.point ?? null, placeName: '', hallwayNodeId: null, photoStationId: null, mapHeading: null, description: '', photo: null, context });
-  const [selectedKind, setSelectedKind] = useState<ReportKind | null>(adminPhoto ? 'photo' : null);
+  const initialKind = adminPhoto ? 'photo' : context.kind;
+  const initialStation = photoStations.find((station) => station.id === context.photoStationId && station.floor === context.floor);
+  const [draft, setDraft] = useState<ReportDraft>({ kind: initialKind ?? 'map', category: 'wrong_route', floor: context.floor, point: initialStation?.point ?? (initialKind === 'photo' ? null : context.point ?? null), placeName: '', hallwayNodeId: null, photoStationId: initialStation?.id ?? null, mapHeading: initialStation ? context.mapHeading ?? null : null, description: '', photo: null, context });
+  const [selectedKind, setSelectedKind] = useState<ReportKind | null>(initialKind ?? null);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -38,6 +40,9 @@ export const ReportDialog = ({ context, adminPhoto = false, onClose }: ReportDia
   const [mapReset, setMapReset] = useState(0);
   const [coverageState, setCoverageState] = useState<{ floor: Floor; coverage: PhotoCoverage; failed: boolean } | null>(null);
   const [coverageRetry, setCoverageRetry] = useState(0);
+  const [editPhotoLocation, setEditPhotoLocation] = useState(false);
+  const quickPhoto = context.kind === 'photo' && !!initialStation && selectedKind === 'photo' && !editPhotoLocation;
+  const selectedStation = photoStations.find((station) => station.id === draft.photoStationId);
   useEffect(() => {
     if (selectedKind !== 'photo') return;
     return watchPhotoCoverage(draft.floor,
@@ -89,7 +94,7 @@ export const ReportDialog = ({ context, adminPhoto = false, onClose }: ReportDia
   const center = original ?? (draft.floor === context.floor ? context.point : undefined);
 
   return (
-    <dialog ref={dialog} className="report-dialog" aria-labelledby="report-title" onCancel={(event) => { event.preventDefault(); if (!sending) onClose(); }}>
+    <dialog ref={dialog} className="report-dialog" data-quick-photo={quickPhoto} aria-labelledby="report-title" onCancel={(event) => { event.preventDefault(); if (!sending) onClose(); }}>
       <div className="report-shell">
         <header className="report-header"><h2 id="report-title">{sent ? (adminPhoto ? 'Photo published' : 'Report submitted') : selectedKind ? kinds.find((k) => k.id === selectedKind)!.label : 'Report an issue'}</h2><button type="button" className="report-close" aria-label="Close report" disabled={sending} onClick={onClose}>×</button></header>
         {sent ? <><div className="report-confirmation"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m12 24 8 8 16-19" /></svg><h3>{adminPhoto ? 'Photo published.' : 'Ready for review.'}</h3><p>{adminPhoto ? 'This photo is now part of the location photo collection.' : 'Map changes and photos are checked before they are published.'}</p></div><footer className="report-actions"><Button variant="primary" onClick={onClose}>Done</Button></footer></> : !selectedKind ? <div className="report-type-chooser"><p>What would you like to report?</p>{kinds.map((kind, index) => <button key={kind.id} type="button" onClick={() => { setKind(kind.id); setSelectedKind(kind.id); }}><span className="report-type-symbol" aria-hidden="true">{['↗', '⌖', '▧'][index]}</span><span><strong>{kind.label}</strong><small>{kind.detail}</small></span><span aria-hidden="true">›</span></button>)}</div> : (
@@ -103,11 +108,12 @@ export const ReportDialog = ({ context, adminPhoto = false, onClose }: ReportDia
             catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not send your report. Please try again.'); }
             finally { setSending(false); }
           }}>
-            <fieldset className="report-body" disabled={sending}>
+            <fieldset className={`report-body ${quickPhoto ? 'report-body--quick' : ''}`} disabled={sending}>
               <legend className="sr-only">Report details</legend>
-              {!adminPhoto && <button type="button" className="report-change-type" onClick={() => setSelectedKind(null)}>← Change report type</button>}
-              {context.from && context.to && <p className="report-context">{context.from} → {context.to}{context.stepIndex !== undefined && ` · Step ${context.stepIndex + 1}`}</p>}
+              {!adminPhoto && !quickPhoto && <button type="button" className="report-change-type" onClick={() => setSelectedKind(null)}>← Change report type</button>}
+              {!quickPhoto && context.from && context.to && <p className="report-context">{context.from} → {context.to}{context.stepIndex !== undefined && ` · Step ${context.stepIndex + 1}`}</p>}
               {draft.kind === 'map' && <Select label="What is wrong?" value={draft.category} options={[{ value: 'wrong_route', label: 'Incorrect directions' }, { value: 'blocked_path', label: 'Blocked or inaccessible path' }, { value: 'incorrect_label', label: 'Wrong location or room label' }, { value: 'other', label: 'Something else' }]} onChange={(category) => update({ category: category as ReportDraft['category'] })} />}
+              {quickPhoto ? <section className="quick-photo-context" aria-label="Selected photo view"><div><span>{floorName(draft.floor)} · Step {(context.stepIndex ?? 0) + 1}</span><strong>{selectedStation?.label}</strong><p>{({0:'↑ Facing up on map',90:'→ Facing right on map',180:'↓ Facing down on map',270:'← Facing left on map'})[draft.mapHeading ?? 0]}</p></div><button type="button" onClick={() => setEditPhotoLocation(true)}>Change</button></section> : <>
               <div className="report-label"><span>Floor</span><div className="report-floors" role="group" aria-label="Floor">{FLOORS.map((f) => <button type="button" key={f.id} aria-label={f.name} aria-pressed={draft.floor === f.id} onClick={() => setFloor(f.id)}>{f.id}</button>)}</div></div>
               {draft.kind === 'entrance' && <Combobox id="report-room" label="Room or location" value={draft.placeName} options={Object.keys(places).filter((name) => placeFloor[name] === draft.floor)} placeholder="Search this floor" onChange={selectRoom} />}
               <section className="report-location" aria-labelledby="report-location-title">
@@ -119,15 +125,19 @@ export const ReportDialog = ({ context, adminPhoto = false, onClose }: ReportDia
                 <p className="report-help">{draft.kind === 'entrance' ? 'Purple: proposed door. Blue: connected hallway. Outline: current mapped door.' : draft.kind === 'photo' ? 'Purple: views still needed. Green: all four directions photographed.' : 'Tap to place the pin. Drag to pan; use + to zoom in.'}</p>
                 {draft.kind === 'photo' && <Select label="Photo spot" searchable placeholder="Choose a spot on the map" value={draft.photoStationId ?? ''} options={stations.map((spot, index) => ({ value: spot.id, label: `${spot.label} · spot ${index + 1}` })).filter((option) => (coverage[option.value]?.length ?? 0) < 4)} onChange={(id) => { const spot = stations.find((s) => s.id === id); if (spot) { update({ point: spot.point, photoStationId: spot.id }); setMapReset((v) => v + 1); } }} />}
               </section>
+              {context.kind === 'photo' && initialStation && selectedKind === 'photo' && <button type="button" className="quick-photo-done" disabled={!draft.photoStationId || draft.mapHeading === null} onClick={() => setEditPhotoLocation(false)}>Use this view</button>}
+              </>}
 
-              <label className="report-label" htmlFor="report-description">{draft.kind === 'map' ? 'Describe the issue' : 'Details (optional)'}<textarea id="report-description" value={draft.description} maxLength={1500} rows={3} placeholder={draft.kind === 'entrance' ? 'What should we know about this entrance?' : draft.kind === 'photo' ? 'Any useful landmarks or context?' : 'What happened, and what should be different?'} onChange={(e) => update({ description: e.target.value })} /></label>
-              {draft.kind === 'photo' && <div className="report-coverage-status" aria-live="polite">{!coverageReady ? coverageState?.floor === draft.floor && coverageState.failed ? <><p>Could not check existing photos. Try again before adding a photo.</p><button type="button" onClick={() => { setCoverageState(null); setCoverageRetry((value) => value + 1); }}>Retry</button></> : <p>Checking existing photos…</p> : completeSpot ? <p>All four directions already have photos. Choose another spot.</p> : duplicatePhoto ? <p>This direction already has a photo. Choose another direction or spot.</p> : captured.length > 0 ? <p>{captured.length} of 4 directions already photographed. Checked directions cannot be added again.</p> : <p>Choose a spot and a direction that still needs a photo.</p>}</div>}
+
+              {!quickPhoto && <label className="report-label" htmlFor="report-description">{draft.kind === 'map' ? 'Describe the issue' : 'Details (optional)'}<textarea id="report-description" value={draft.description} maxLength={1500} rows={3} placeholder={draft.kind === 'entrance' ? 'What should we know about this entrance?' : draft.kind === 'photo' ? 'Any useful landmarks or context?' : 'What happened, and what should be different?'} onChange={(e) => update({ description: e.target.value })} /></label>}
+              {draft.kind === 'photo' && (!quickPhoto || !coverageReady || duplicatePhoto || completeSpot) && <div className="report-coverage-status" aria-live="polite">{!coverageReady ? coverageState?.floor === draft.floor && coverageState.failed ? <><p>Could not check existing photos. Try again before adding a photo.</p><button type="button" onClick={() => { setCoverageState(null); setCoverageRetry((value) => value + 1); }}>Retry</button></> : <p>Checking existing photos…</p> : completeSpot ? <p>All four directions already have photos. Choose another spot.</p> : duplicatePhoto ? <p>This direction already has a photo. Choose another direction or spot.</p> : captured.length > 0 ? <p>{captured.length} of 4 directions already photographed. Checked directions cannot be added again.</p> : <p>Choose a spot and a direction that still needs a photo.</p>}</div>}
               <fieldset className="report-photo-fieldset" disabled={photoBlocked}><PhotoAttachment required={draft.kind === 'photo'} file={draft.photo} preview={preview} onFile={(file) => {
                 const invalid = validatePhoto(file); if (invalid) { setError(invalid); return; }
                 setPreview(URL.createObjectURL(file)); update({ photo: file });
               }} onRemove={() => { setPreview(null); update({ photo: null }); }} /></fieldset>
+              {quickPhoto && <details className="quick-photo-note"><summary>Add a note (optional)</summary><label className="report-label" htmlFor="quick-photo-note">Details<textarea id="quick-photo-note" value={draft.description} maxLength={1500} rows={2} onChange={(event) => update({ description: event.target.value })} /></label></details>}
             </fieldset>
-            <footer className="report-actions">{error && <Message role="alert" tone="error">{error}</Message>}<p className="report-help">{adminPhoto ? 'Administrator photos are published immediately.' : `Submitted privately for review${context.from ? ', including this route and step' : ''}.`}</p><Button type="submit" variant="primary" disabled={sending || photoBlocked}>{sending ? 'Sending…' : adminPhoto ? 'Publish photo' : 'Submit report'}</Button></footer>
+            <footer className="report-actions">{error && <Message role="alert" tone="error">{error}</Message>}<p className="report-help">{adminPhoto ? 'Administrator photos are published immediately.' : quickPhoto ? 'Photos are reviewed before publishing.' : `Submitted privately for review${context.from ? ', including this route and step' : ''}.`}</p><Button type="submit" variant="primary" disabled={sending || photoBlocked}>{sending ? 'Sending…' : adminPhoto ? 'Publish photo' : 'Submit report'}</Button></footer>
           </form>
         )}
       </div>

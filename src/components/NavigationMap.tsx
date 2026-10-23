@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react';
+import type { MapHeading } from '../types/reports';
 import type { Point, Step } from '../route';
 import { FLOORS } from '../building';
 import { RouteMarker } from './RouteMarker';
@@ -9,9 +10,9 @@ const H = 1904;
 const dev = new URLSearchParams(location.search).has('dev');
 const vertical = (step: Step) => step.turn === 'up' || step.turn === 'down';
 
-interface NavigationMapProps { steps: Step[]; index: number; from: string; to: string }
+interface NavigationMapProps { photoPoint?: Point; photoHeading?: MapHeading; steps: Step[]; index: number; from: string; to: string }
 
-export const NavigationMap = ({ steps, index, from, to }: NavigationMapProps) => {
+export const NavigationMap = ({ photoPoint, photoHeading = 0, steps, index, from, to }: NavigationMapProps) => {
   const step = steps[index];
   let first = index;
   let end = index;
@@ -50,6 +51,7 @@ export const NavigationMap = ({ steps, index, from, to }: NavigationMapProps) =>
       <image key={step.floor} href={FLOORS.find((f) => f.id === step.floor)!.image} width={W} height={H} />
       <polyline points={route.map((p) => p.join(',')).join(' ')} className="route" />
       {end === steps.length - 1 && <circle cx={dest[0]} cy={dest[1]} r="22" className="goal" />}
+      {photoPoint && <g aria-hidden="true" transform={`translate(${photoPoint[0]} ${photoPoint[1]}) rotate(${photoHeading})`}><path d="M0-35 18-6 0-12-18-6Z" className="photo-position-marker" /><circle cy="12" r="10" className="photo-position-marker" /></g>}
       <RouteMarker key={`${step.floor}-${first}`} points={route} distance={distance} />
     </svg>
   );

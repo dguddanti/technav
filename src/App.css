@@ -177,3 +177,30 @@ h1, h2, p { margin: 0; }
 .report-trigger:hover { color: var(--primary); }
 .report-trigger svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .navigation-header .route-back { min-width: 0; }
+.navigation { gap: 12px; min-height: 0; overflow: hidden; padding-top: max(20px, env(safe-area-inset-top)); }
+.navigation-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.navigation-header .route-back { flex: 1; }
+.overview-icon { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 12px; background: #fff; color: var(--primary); flex-shrink: 0; }
+.overview-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.navigation .card { min-height: 76px; }
+.navigation .route-progress { gap: 7px; }
+@media (max-height: 650px) {
+  .navigation { gap: 8px; padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .navigation .card { min-height: 68px; gap: 12px; }
+  .navigation .instruction h2 { font-size: 18px; line-height: 24px; }
+  .navigation .instruction p:not(.sr-only) { margin-top: 2px; font-size: 13px; line-height: 20px; }
+  .navigation .instruction p.eyebrow { font-size: 10px; line-height: 15px; }
+}
+@media (max-height: 500px) {
+  .navigation { padding: 8px 16px; gap: 6px; }
+  .navigation .route-content { gap: 6px; }
+  .navigation .route-endpoints { gap: 0; }
+  .navigation .route-endpoints strong { font-size: 18px; line-height: 24px; }
+  .navigation .route-back { gap: 8px; }
+  .navigation .card { min-height: 50px; }
+  .navigation .instruction p.eyebrow { display: none; }
+  .navigation .nav .ui-button { min-height: 44px; padding-block: 9px; }
+}
+.route-endpoints .eyebrow { max-width: 100%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.active-directions { display: flex; flex-direction: column; gap: inherit; flex: 1; min-height: 0; }
+.active-directions[hidden] { display: none; }

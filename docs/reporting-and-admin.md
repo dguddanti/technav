@@ -45,8 +45,23 @@ so competing approvals cannot publish the same view twice. Other directions
 remain available. Fully photographed stations are green and excluded from the
 photo-spot options. Existing map/entrance issue reports remain available.
 Published photo files become readable only when a
-matching published record exists. Published photos are a capture dataset for a
-future walkthrough; the navigation screen does not yet display a 3D/photo viewer.
+matching published record exists. Navigation displays approved photos for capture stations on the current step's
+polyline, facing along the route by default. Nearby parallel corridors and other
+floors are excluded. Users can browse capture positions and the four map-relative
+directions without advancing the instruction. A purple camera marker identifies
+the preview's position; it does not represent live tracking.
+
+Map, Both, and Photo modes share the existing viewport budget with the instruction
+and Back/Next controls. Both mode has an accessible draggable/keyboard divider.
+Very short screens use a single view when a useful split would not fit. Without
+a matching photo, map mode includes an Add photo action; Photo/Both show an empty
+state with the same action. The action opens a compact report form with the
+station, direction, floor, route and step prefilled, plus an option to edit the
+location. Read/download failures show retry actions rather than implying the
+view is missing. Images are loaded on demand and a route-scoped bounded cache
+limits repeat downloads. Leaving the viewer revokes temporary image URLs.
+
+This is a photo viewer, not a reconstruction of continuous 3D geometry.
 Map issues are manually resolved/rejected; marking one resolved does not rewrite
 hallway geometry automatically. Each room currently has one canonical entrance.
 
@@ -109,10 +124,11 @@ Authentication providers are enabled. The three bootstrap administrators, 999
 photo stations, and 1843 hallway nodes have been registered. Existing published
 photo slots have been backfilled (there were no published production photos).
 
-Storage is still unavailable: the project has billing disabled and the configured
-bucket does not exist. Photo submissions/uploads remain unavailable until the
-project owner enables Blaze and initializes Storage. Text-only map reports and
-entrance corrections use Firestore and do not require Storage.
+Storage is available: the bucket `technav-db7a8.firebasestorage.app`
+(`US-EAST1`) exists, `storage.rules` is deployed, and the GET CORS origins in
+`storage.cors.json` are applied. Photo submissions/uploads and the navigation
+photo viewer work against production. Text-only map reports and entrance
+corrections use Firestore and do not require Storage.
 
 1. In project `technav-db7a8`, enable Cloud Firestore and create the `(default)`
    database. Select a region deliberately (e.g. `us-central1`).

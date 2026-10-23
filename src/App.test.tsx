@@ -1,3 +1,4 @@
+vi.mock('./services/locationPhotos', () => ({ watchLocationPhotos: (_floor: string, receive: (photos: never[]) => void) => { receive([]); return () => {}; }, loadLocationPhoto: vi.fn() }));
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import App from './App';
