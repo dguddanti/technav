@@ -3,6 +3,7 @@ import { places, getSteps } from './route';
 import type { Step } from './route';
 import { FLOORS, floorName } from './building';
 import { NavigationMap } from './components/NavigationMap';
+const NavigationViews = lazy(() => import('./components/NavigationViews').then((module) => ({ default: module.NavigationViews })));
 import { Button } from './components/ui/Button';
 import { Combobox } from './components/ui/Combobox';
 import { Message } from './components/ui/Message';
@@ -98,25 +99,30 @@ export default function App() {
           <img src="/icons/back.svg" width="24" height="24" alt="" />
           <span className="route-endpoints"><span className="eyebrow">{a} →</span><strong>{b}</strong></span>
         </Button>
+        <div className="navigation-header-actions">
         <ReportButton onClick={() => setReportContext({ floor: step.floor, point: step.turn === 'up' || step.turn === 'down' ? step.pts.at(-1)! : step.pts[0], from: a, to: b, stepIndex: i, stepText: step.text })} />
+      <button
+        ref={overviewToggle}
+        type="button"
+        className="overview-icon"
+        aria-label={showOverview ? 'Back to map' : 'View all steps'}
+        title={showOverview ? 'Back to map' : 'View all steps'}
+        aria-expanded={showOverview}
+        aria-controls="route-content"
+        onClick={() => setShowOverview(!showOverview)}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d={showOverview ? 'm3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Zm6-3v15m6-12v15' : 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'} /></svg>
+      </button>
+        </div>
       </header>
       <div className="route-progress">
         <p className="eyebrow">Step {i + 1} of {steps.length} · {floorName(step.floor)}</p>
         <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
       </div>
-      <button
-        ref={overviewToggle}
-        type="button"
-        className="overview-toggle"
-        aria-expanded={showOverview}
-        aria-controls="route-content"
-        onClick={() => setShowOverview(!showOverview)}
-      >
-        {showOverview ? 'Back to map' : 'View all steps'}
-      </button>
+
 
       <div id="route-content" className="route-content">
-      {showOverview ? (
+      {showOverview && (
         <section className="overview" aria-labelledby="overview-title">
           <h2 id="overview-title">All directions</h2>
           <ol>
@@ -141,9 +147,9 @@ export default function App() {
             ))}
           </ol>
         </section>
-      ) : (
-      <>
-      <NavigationMap steps={steps} index={i} from={a!} to={b!} />
+      )}
+      <div className="active-directions" hidden={showOverview}>
+      <Suspense fallback={<NavigationMap steps={steps} index={i} from={a!} to={b!} />}><NavigationViews steps={steps} index={i} from={a!} to={b!} onAddPhoto={setReportContext} /></Suspense>
       <div className="card" aria-live="polite" aria-atomic="true">
         <span className={`direction-icon direction-icon--${step.turn}`} aria-hidden="true">
           {step.turn === 'arrive' ? <svg viewBox="0 0 32 32"><path d="m7 16 6 6L25 9" /></svg>
@@ -170,8 +176,7 @@ export default function App() {
           {last ? 'Done' : 'Next'}
         </Button>
       </div>
-      </>
-      )}
+      </div>
       </div>
     </main>{reportContext && <Suspense fallback={null}><ReportDialog context={reportContext} onClose={() => setReportContext(null)} /></Suspense>}</>
   );

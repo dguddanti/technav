@@ -18,6 +18,9 @@ export interface PhotoStation {
 }
 
 export interface ReportContext {
+  kind?: ReportKind;
+  photoStationId?: string;
+  mapHeading?: MapHeading;
   floor: Floor;
   point?: Point;
   from?: string;

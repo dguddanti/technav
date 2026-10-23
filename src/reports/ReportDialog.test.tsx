@@ -68,3 +68,15 @@ it('blocks uploads when existing photos cannot be checked and lets the user retr
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(screen.getByRole('button', { name: 'Choose photo' })).toBeEnabled();
 });
+
+it('opens route photo contributions with a compact prefilled capture form and editable location', () => {
+  const spot = photoStations.find((station) => station.floor === '1')!;
+  render(<ReportDialog context={{ kind: 'photo', floor: '1', photoStationId: spot.id, point: spot.point, mapHeading: 90, stepIndex: 2 }} onClose={vi.fn()} />);
+  expect(screen.getByText('→ Facing right on map')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Take photo' })).toBeInTheDocument();
+  expect(screen.queryByRole('application')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^Change$/ }));
+  expect(screen.getByRole('application')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Use this view' }));
+  expect(screen.queryByRole('application')).toBeNull();
+});
