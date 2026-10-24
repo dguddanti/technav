@@ -1,185 +1,296 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TechNav: indoor directions for the Northwestern University Technological Institute. What it is, how to use it, and what data it collects.">
-<title>TechNav: Indoor directions for Tech</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-<style>
-  :root {
-    --primary: #4e2a84;
-    --text: #24212a;
-    --muted: #736e7d;
-    --border: #e5e0ea;
-    --soft: #f5f2f9;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: #fff;
-    color: var(--text);
-    font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    font-size: 17px;
-    line-height: 1.65;
-  }
-  .wrap { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem 4rem; }
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 3rem;
-  }
-  .wordmark { font-weight: 800; font-size: 1.15rem; color: var(--primary); text-decoration: none; }
-  .topbar nav { display: flex; gap: 1.25rem; }
-  .topbar nav a { color: var(--text); font-weight: 600; font-size: 0.95rem; text-decoration: none; }
-  .topbar nav a:hover { color: var(--primary); }
-  .eyebrow { margin: 0 0 0.6rem; font-size: 0.9rem; font-weight: 600; color: var(--muted); }
-  h1 { margin: 0 0 1rem; font-size: 2.75rem; line-height: 1.12; letter-spacing: -1.2px; font-weight: 800; }
-  h1 .accent { color: var(--primary); }
-  .lede { margin: 0 0 1.75rem; font-size: 1.12rem; color: var(--muted); max-width: 34rem; }
-  .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 3rem; }
-  .actions a {
-    display: inline-block;
-    padding: 0.7rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 1rem;
-    text-decoration: none;
-  }
-  .actions a.primary { background: var(--primary); color: #fff; }
-  .actions a.secondary { border: 1px solid var(--border); color: var(--primary); }
-  figure.shot {
-    margin: 0 0 2.5rem;
-    background: var(--soft);
-    border-radius: 16px;
-    padding: 1.5rem;
-  }
-  figure.shot video {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 16 / 9;
-    border-radius: 12px;
-    background: #fff;
-    display: block;
-  }
-  .notice {
-    border: 1px solid var(--border);
-    background: var(--soft);
-    border-radius: 10px;
-    padding: 1rem 1.25rem;
-    margin: 0 0 3rem;
-  }
-  .notice strong { display: block; margin-bottom: 0.25rem; }
-  .notice p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  section { margin-bottom: 2.75rem; }
-  .sec-head { display: flex; align-items: baseline; gap: 0.9rem; border-top: 1px solid var(--border); padding-top: 1.5rem; margin-bottom: 0.9rem; }
-  .sec-num { font-weight: 800; font-size: 1rem; color: var(--primary); }
-  h2 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.3px; margin: 0; }
-  p { margin: 0 0 1rem; }
-  ul.body, ol.body { margin: 0 0 1rem; padding-left: 1.35rem; }
-  .body li { margin-bottom: 0.45rem; }
-  .body li::marker { color: var(--primary); font-weight: 700; }
-  a { color: var(--primary); }
-  .qr-row { display: flex; align-items: center; gap: 1rem; margin-top: 1.25rem; }
-  .qr-row img { width: 76px; height: 76px; border: 1px solid var(--border); border-radius: 8px; }
-  .qr-row p { margin: 0; color: var(--muted); font-size: 0.93rem; }
-  footer { margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
-  footer p { margin: 0 0 0.5rem; }
-  @media (max-width: 560px) {
-    body { font-size: 16px; }
-    .wrap { padding-bottom: 3rem; }
-    .topbar { margin-bottom: 2.25rem; }
-    h1 { font-size: 2.1rem; letter-spacing: -0.8px; }
-    .lede { font-size: 1.02rem; }
-    .actions a { flex: 1 1 100%; text-align: center; }
-    figure.shot { padding: 1rem; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TechNav — indoor directions for Tech</title>
+  <meta name="description" content="Step-by-step indoor directions for Northwestern's Technological Institute. A student prototype for CS 392.">
+  <meta name="theme-color" content="#4e2a84">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="feedback.js"></script>
 </head>
 <body>
-<div class="wrap">
-
-  <header class="topbar">
-    <a class="wordmark" href="https://technav-db7a8.web.app">TechNav</a>
-    <nav aria-label="Project links">
-      <a href="https://technav-db7a8.web.app">Open the app</a>
-      <a href="https://github.com/dguddanti/technav">GitHub</a>
-    </nav>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="logo" href="#top">
+        <span class="logo-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>
+        </span>
+        TechNav
+      </a>
+      <nav class="navlinks" aria-label="Sections">
+        <a class="section-link" href="#why">Why</a>
+        <a class="section-link" href="#how">How it works</a>
+        <a class="section-link" href="#privacy">Privacy</a>
+        <a class="section-link" href="#feedback">Feedback</a>
+        <a class="btn btn-primary" href="https://technav-db7a8.web.app">Open app</a>
+      </nav>
+    </div>
   </header>
 
-  <main>
-    <p class="eyebrow">Northwestern CS392 course project</p>
-    <h1>Indoor directions for <span class="accent">Tech.</span></h1>
-    <p class="lede">Step-by-step turns inside the Northwestern University Technological Institute, basement through fourth floor.</p>
-    <div class="actions">
-      <a class="primary" href="https://technav-db7a8.web.app">Open the app</a>
-      <a class="secondary" href="https://github.com/dguddanti/technav">GitHub repository</a>
-    </div>
+  <main id="top" class="wrap">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1 class="h1 in d1">Find any room in Tech. <span class="highlight">Floor by floor.</span></h1>
+        <p class="lead in d2">
+          TechNav gives you step-by-step walking directions inside the Technological Institute,
+          from the basement up to Floor 4. Pick where you are and where you're going, then follow
+          the route on the floor plan right in your phone's browser.
+        </p>
+        <div class="btnrow in d3">
+          <a class="btn btn-primary" href="https://technav-db7a8.web.app">Get directions now <span class="arr" aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="#how">See how it works</a>
+        </div>
+        <p class="fineprint in d4">Free · no account · no app download · works on any phone or laptop</p>
+      </div>
 
-    <figure class="shot">
-      <video src="assets/how-it-works.mp4" poster="assets/video-poster.png" autoplay muted loop playsinline controls preload="metadata" aria-label="Short captioned video of the real app: searching A112, following the route, and reporting an issue"></video>
-    </figure>
-    <script>
-      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        var v = document.querySelector("figure.shot video");
-        if (v) { v.removeAttribute("autoplay"); v.pause(); }
-      }
-    </script>
-
-    <div class="notice" role="note">
-      <strong>Prototype notice</strong>
-      <p>TechNav is a prototype built for Northwestern CS392. It may contain bugs. Maps and photos may be incomplete. It may not be maintained past the quarter.</p>
-    </div>
-
-    <section aria-labelledby="what">
-      <div class="sec-head"><span class="sec-num" aria-hidden="true">01</span><h2 id="what">What it is</h2></div>
-      <ul class="body">
-        <li>Room search with step-by-step instructions and a route map.</li>
-        <li>Hallway photos at fixed points along the route, where available.</li>
-        <li>Issue reporting: wrong routes, entrance corrections, and photo contributions.</li>
-        <li>Submissions are reviewed before anything is published.</li>
-      </ul>
-    </section>
-
-    <section aria-labelledby="who">
-      <div class="sec-head"><span class="sec-num" aria-hidden="true">02</span><h2 id="who">Who it is for</h2></div>
-      <p>Anyone navigating the Northwestern University Technological Institute (Tech). The building has split levels and long hallways that are difficult to navigate on a first visit.</p>
-      <p>The app runs in a mobile browser. It is free. Nothing to install.</p>
-    </section>
-
-    <section aria-labelledby="how">
-      <div class="sec-head"><span class="sec-num" aria-hidden="true">03</span><h2 id="how">How to use it</h2></div>
-      <ol class="body">
-        <li>Open <a href="https://technav-db7a8.web.app">technav-db7a8.web.app</a> on a phone.</li>
-        <li>Search for a destination room and pick a starting point.</li>
-        <li>Follow the steps. Use the report button to flag errors.</li>
-      </ol>
-      <div class="qr-row">
-        <img src="assets/demo-qr.png" alt="QR code linking to the TechNav app" width="76" height="76">
-        <p>Scan to open the app on your phone.<br>Source code: <a href="https://github.com/dguddanti/technav">github.com/dguddanti/technav</a>.</p>
+      <!-- Decorative phone showing a route being drawn -->
+      <div class="stage in d2" aria-hidden="true">
+        <div class="blob"></div>
+        <div class="phone">
+          <div class="screen">
+            <div class="screen-top">
+              <p class="screen-step">Step 3 of 6 · Floor 2</p>
+              <div class="progress"><span></span></div>
+            </div>
+            <svg class="screen-map" viewBox="0 0 276 300">
+              <rect x="20" y="20" width="236" height="260" rx="10" fill="#f1ecf7"/>
+              <rect x="34" y="34" width="70" height="60" rx="6" fill="#fff"/>
+              <rect x="114" y="34" width="56" height="60" rx="6" fill="#fff"/>
+              <rect x="180" y="34" width="62" height="100" rx="6" fill="#fff"/>
+              <rect x="34" y="104" width="70" height="80" rx="6" fill="#fff"/>
+              <rect x="34" y="194" width="110" height="72" rx="6" fill="#fff"/>
+              <rect x="154" y="194" width="88" height="72" rx="6" fill="#fff"/>
+              <rect x="180" y="144" width="62" height="40" rx="6" fill="#fff"/>
+              <rect x="114" y="104" width="56" height="34" rx="6" fill="#e7dfef"/>
+              <path class="route" d="M60 250 L60 186 L109 186 L109 99 L175 99 L175 140 L210 140" fill="none" stroke="#4e2a84" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="60" cy="250" r="8" fill="#fff" stroke="#4e2a84" stroke-width="4"/>
+              <g class="pin">
+                <circle cx="210" cy="140" r="12" fill="#d97a1e"/>
+                <circle cx="210" cy="140" r="4.5" fill="#fff"/>
+              </g>
+            </svg>
+            <div class="screen-bottom">
+              <p class="screen-instruction">Turn right and walk to room 2380</p>
+              <p class="screen-note">About 40 m · distances are estimates</p>
+              <div class="screen-buttons">
+                <span>Back</span>
+                <span class="next">Next</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="floaty floaty-floors">
+          <div class="floors"><span>B</span><span>G</span><span>1</span><span class="on">2</span><span>3</span><span>4</span></div>
+        </div>
+        <div class="floaty floaty-stepfree">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4e2a84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 9l3-3 3 3"/><path d="M9 15l3 3 3-3"/></svg>
+          Step-free route on
+        </div>
       </div>
     </section>
 
-    <section aria-labelledby="privacy">
-      <div class="sec-head"><span class="sec-num" aria-hidden="true">04</span><h2 id="privacy">Data collection</h2></div>
-      <p>The app collects:</p>
-      <ul class="body">
-        <li>Submitted reports: text, floor, map pin, and route context (start, destination, step).</li>
-        <li>Submitted photos: resized to 1600 px max, re-encoded as JPEG, original metadata removed.</li>
-        <li>Aggregate usage counts via Firebase Analytics on the production site.</li>
-      </ul>
-      <p>Authorized reviewers read reports to approve them. Approved photos and entrances become visible to all app users. Hosting, database, and authentication run on Google Firebase. Nothing is sold or shared with other third parties.</p>
+    <section class="stats reveal" aria-label="TechNav at a glance">
+      <div class="stat"><p class="stat-number">6</p><p class="stat-label">floors mapped, B through 4</p></div>
+      <div class="stat"><p class="stat-number">1,000+</p><p class="stat-label">rooms and places to search</p></div>
+      <div class="stat"><p class="stat-number">0</p><p class="stat-label">accounts or sign-ups</p></div>
+      <div class="stat"><p class="stat-number">0</p><p class="stat-label">downloads, it runs in the browser</p></div>
     </section>
+
+    <section id="why" class="sec">
+      <div class="sec-head reveal">
+        <p class="eyebrow">Why TechNav</p>
+        <h2 class="h2">Tech is huge. Your class starts in five minutes.</h2>
+        <p class="lead">Room numbers like AG26 or A170C don't tell you which wing, which floor, or which staircase. TechNav does.</p>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+          <h3>First week, new building</h3>
+          <p>New students, visitors and anyone with a class in an unfamiliar wing can type a room number and get a route, no asking around.</p>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 9l3-3 3 3"/><path d="M9 15l3 3 3-3"/></svg></div>
+          <h3>Step-free when you need it</h3>
+          <p>Turn on the step-free option and every floor change uses an elevator. Useful with a mobility aids, crutches, a cart or a heavy bag.</p>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></div>
+          <h3>Across floors, not just hallways</h3>
+          <p>Routes go between floors, from the basement to Floor 4, and show the right floor plan for each step as you go.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="how" class="sec">
+      <div class="sec-head reveal">
+        <p class="eyebrow">How it works</p>
+        <h2 class="h2">Three steps from lost to there.</h2>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <div class="num">1</div>
+          <h3>Choose From and To</h3>
+          <p>Start typing a room number or place name, like Main Entrance, and pick it from the list. Tick "Step-free route" if you want elevators only.</p>
+        </article>
+        <article class="card reveal">
+          <div class="num">2</div>
+          <h3>Follow the route</h3>
+          <p>Each step shows one instruction with the route drawn on that floor's plan. Tap Next to move on; the floor plan changes when you do.</p>
+        </article>
+        <article class="card reveal">
+          <div class="num">3</div>
+          <h3>See every step at once</h3>
+          <p>Tap "View all steps" for the whole route as a list, and jump back to any step if you lose your place.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="what" class="sec">
+      <div class="sec-head reveal">
+        <p class="eyebrow">What's inside</p>
+        <h2 class="h2">More than a map.</h2>
+      </div>
+      <div class="cards">
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15"/><path d="M15 6v15"/></svg></div>
+          <h3>Room search and route map</h3>
+          <p>Search any room, then follow step-by-step instructions with the route drawn on the floor plan.</p>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <h3>Hallway photos</h3>
+          <p>Where available, see real photos taken at fixed points along your route, so you know what the hallway looks like.</p>
+        </article>
+        <article class="card reveal">
+          <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/></svg></div>
+          <h3>Report issues</h3>
+          <p>Flag a wrong route, correct a room's entrance, or contribute a photo. Submissions are reviewed before anything is published.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="get" class="sec">
+      <div class="get reveal">
+        <div>
+          <p class="eyebrow">How to get it</p>
+          <h2 class="h2">Nothing to install. Just open the link.</h2>
+          <p class="get-text">TechNav is a website, so it works on iPhone, Android and laptops alike.</p>
+          <a class="url" href="https://technav-db7a8.web.app">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.7-1.7"/></svg>
+            technav-db7a8.web.app
+          </a>
+        </div>
+        <ol class="howto">
+          <li><span class="n">1</span><span>Open <b>technav-db7a8.web.app</b> in Safari, Chrome or any browser.</span></li>
+          <li><span class="n">2</span><span>Optional: use your browser's <b>Share → Add to Home Screen</b> so it sits next to your apps.</span></li>
+          <li><span class="n">3</span><span>Pick your start and destination, then tap <b>Get Directions</b>.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="feedback" class="sec feedback">
+      <div class="feedback-intro reveal">
+        <p class="eyebrow">Feedback</p>
+        <h2 class="h2">Got lost anyway? Tell us.</h2>
+        <p class="lead">Wrong turn, missing room, confusing step, or an idea for what TechNav should do next. Every message helps shape the prototype.</p>
+        <p class="notice"><b>Who reads this:</b> the TechNav team and the CS 392 teaching staff. Email is optional; leave it blank to stay anonymous.</p>
+      </div>
+
+      <div class="form-card reveal">
+        <div id="fb-thanks" class="thanks" role="status" hidden>
+          <div class="thanks-icon">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+          </div>
+          <h3>Thanks, that's sent.</h3>
+          <p>We read every message. If you left an email, we may follow up.</p>
+          <button id="fb-again" class="btn btn-ghost" type="button">Send another</button>
+        </div>
+
+        <form id="fb-form" class="form">
+          <fieldset class="pills">
+            <legend class="label">What kind of feedback?</legend>
+            <button class="pill selected" type="button" aria-pressed="true" data-type="wrong">Wrong directions</button>
+            <button class="pill" type="button" aria-pressed="false" data-type="bug">Something broke</button>
+            <button class="pill" type="button" aria-pressed="false" data-type="idea">Idea</button>
+            <button class="pill" type="button" aria-pressed="false" data-type="other">Other</button>
+          </fieldset>
+          <div>
+            <label class="label" for="fb-msg">Your message</label>
+            <textarea id="fb-msg" class="input" name="message" required maxlength="2000" placeholder="e.g. The route from Main Entrance to A110 sent me through a locked door."></textarea>
+          </div>
+          <div class="two">
+            <div>
+              <label class="label" for="fb-from">From <span class="optional">(optional)</span></label>
+              <input id="fb-from" class="input" name="from" type="text" maxlength="100" placeholder="Main Entrance">
+            </div>
+            <div>
+              <label class="label" for="fb-to">To <span class="optional">(optional)</span></label>
+              <input id="fb-to" class="input" name="to" type="text" maxlength="100" placeholder="Room number">
+            </div>
+          </div>
+          <div>
+            <label class="label" for="fb-email">Email <span class="optional">(optional, only if you want a reply)</span></label>
+            <input id="fb-email" class="input" name="email" type="email" maxlength="200" autocomplete="email" placeholder="you@u.northwestern.edu">
+          </div>
+          <p id="fb-error" class="notice error" role="alert" hidden></p>
+          <button class="btn btn-primary" type="submit">Send feedback <span class="arr" aria-hidden="true">→</span></button>
+        </form>
+      </div>
+    </section>
+
+    <section id="privacy" class="sec">
+      <div class="sec-head reveal">
+        <p class="eyebrow">Privacy</p>
+        <h2 class="h2">What's collected, and who sees it.</h2>
+      </div>
+      <div class="cards cards-tight">
+        <article class="card reveal">
+          <h3>Using the app: analytics</h3>
+          <p>No account and no GPS location. Firebase Analytics records aggregate usage counts on the live site, using a random device ID, not your name. Hosting, database and sign-in run on Google Firebase.</p>
+        </article>
+        <article class="card reveal">
+          <h3>Reports and photos</h3>
+          <p>Reports save your text, floor, map pin and route context (start, destination, step). Photos are resized to 1600 px, re-encoded as JPEG and stripped of metadata. Authorized reviewers approve them; approved photos and entrances are visible to everyone.</p>
+        </article>
+        <article class="card reveal">
+          <h3>Feedback: what you type</h3>
+          <p>Read only by the TechNav team and the CS 392 teaching staff. Email is optional. Nothing is sold or shared with other third parties.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="prototype" class="sec">
+      <div class="proto reveal">
+        <div>
+          <span class="tag">PROTOTYPE</span>
+          <h2 class="h2">Built by students, as a class project</h2>
+          <p class="proto-text">
+            TechNav was built by students for CS 392 at Northwestern in Fall 2026. It's a working
+            prototype, not an official university service, and it's here so real people can try it
+            and tell us what works.
+          </p>
+        </div>
+        <ul>
+          <li><b>It may stop working after the quarter.</b> There's no promise the site stays online or gets updates once the course ends in December 2026.</li>
+          <li><b>Directions can be wrong.</b> Floor plans and rooms may be imprecise and distances are estimates. If a route looks off, trust the signs and tell us through the feedback form above.</li>
+          <li><b>Not for emergencies.</b> In an emergency, follow posted exit signs and building staff, not this app.</li>
+          <li><b>Not affiliated with Northwestern facilities.</b> Room data may be out of date.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>TechNav · built for CS 392, Fall 2026</span>
+      <span class="foot-links">
+        <a href="https://technav-db7a8.web.app">Open TechNav</a>
+        <a href="https://github.com/dguddanti/technav">Source on GitHub</a>
+      </span>
+    </footer>
   </main>
-
-  <footer>
-    <p>TechNav is a Northwestern CS392 course prototype. Last updated October 2026.</p>
-    <p><a href="https://technav-db7a8.web.app">Open the app</a> &middot; <a href="https://github.com/dguddanti/technav">GitHub</a></p>
-  </footer>
-
-</div>
 </body>
 </html>

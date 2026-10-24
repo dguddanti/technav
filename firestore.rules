@@ -57,6 +57,18 @@ service cloud.firestore {
           && request.resource.data.reviewNote is string && request.resource.data.reviewNote.size() <= 1500);
       allow delete: if reviewer() || (signedIn() && resource.data.authorId == request.auth.uid && resource.data.status == 'uploading');
     }
+    // Landing-page feedback (docs/feedback.js): anyone can send, only reviewers can read.
+    match /feedback/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['type', 'message', 'from', 'to', 'email', 'createdAt'])
+        && request.resource.data.keys().hasAll(['type', 'message', 'from', 'to', 'email', 'createdAt'])
+        && request.resource.data.type in ['wrong', 'bug', 'idea', 'other']
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 2000
+        && nullableString(request.resource.data.from, 100) && nullableString(request.resource.data.to, 100)
+        && nullableString(request.resource.data.email, 200)
+        && request.resource.data.createdAt == request.time;
+      allow read, delete: if reviewer();
+      allow update: if false;
+    }
     match /adminEmails/{email} {
       allow get: if verifiedGoogle() && (email == request.auth.token.email.lower() || reviewer());
       allow list: if reviewer();
