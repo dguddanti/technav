@@ -24,7 +24,8 @@ describe('route planning', () => {
     fireEvent.submit(screen.getByRole('button', { name: 'Get Directions' }).closest('form')!);
     expect(screen.getByRole('img', { name: 'Route from A112 to F125' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Exit A112' })).toBeInTheDocument();
-    expect(screen.getByText('About 15 ft')).toBeInTheDocument();
+    expect(screen.queryByText(/\d+ ft/)).toBeNull();
+    expect(screen.queryByText('Distances are estimates.')).toBeNull();
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
@@ -81,6 +82,7 @@ describe('route overview', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View all steps' }));
     const overview = screen.getByRole('region', { name: 'All directions' });
     expect(within(overview).getAllByRole('listitem')).toHaveLength(4);
+    expect(within(overview).queryByText(/\d+ ft/)).toBeNull();
     expect(within(overview).getByRole('button', { name: /^Step 1:/ })).toHaveAttribute('aria-current', 'step');
     expect(within(overview).getByRole('button', { name: /^Step 4:.*You have arrived/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to map' })).toHaveAttribute('aria-expanded', 'true');
@@ -93,7 +95,7 @@ describe('route overview', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Step 2:/ }));
     expect(screen.queryByRole('region', { name: 'All directions' })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Turn left' })).toBeInTheDocument();
-    expect(screen.getByText('About 135 ft')).toBeInTheDocument();
+    expect(screen.queryByText(/\d+ ft/)).toBeNull();
     expect(screen.getByRole('progressbar')).toHaveAttribute('value', '2');
     expect(screen.getByRole('button', { name: 'View all steps' })).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
