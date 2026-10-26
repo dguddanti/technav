@@ -11,10 +11,21 @@ const ReportDialog = lazy(() => import('./reports/ReportDialog').then((module) =
 
 import type { ReportContext } from './types/reports';
 import './App.css';
+import './feedback/feedback.css';
+const FeedbackDialog = lazy(() => import('./feedback/FeedbackDialog').then((module) => ({ default: module.FeedbackDialog })));
 
 import { placeFloor, locationRevision, subscribeLocations } from './locations';
 
 const ReportButton = ({ onClick }: { onClick: () => void }) => <button type="button" className="report-trigger" aria-label="Report an issue" onClick={onClick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0" /></svg><span>Report</span></button>;
+
+const instructionLabel = (step: Step) => {
+  if (step.turn === 'left') return 'Turn left';
+  if (step.turn === 'right') return 'Turn right';
+  if (step.turn === 'around') return 'Turn around';
+  if (step.turn !== 'straight') return step.text;
+  if (step.text.startsWith('Exit ') || step.text.startsWith('Leave ')) return step.text.split(' and ')[0];
+  return 'Continue straight';
+};
 
 export default function App() {
   useSyncExternalStore(subscribeLocations, locationRevision);
@@ -25,6 +36,7 @@ export default function App() {
   const [i, setI] = useState(0);
   const [error, setError] = useState('');
   const [reportContext, setReportContext] = useState<ReportContext | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [avoidStairs, setAvoidStairs] = useState(false);
   const [showOverview, setShowOverview] = useState(false);
   const overviewToggle = useRef<HTMLButtonElement>(null);
@@ -82,10 +94,11 @@ export default function App() {
           className="route-submit"
           disabled={!a || !b || a === b}
         >
-          Get Directions
+          <span>Get Directions</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6" /></svg>
         </Button>
         </form>
-      </main>{reportContext && <Suspense fallback={null}><ReportDialog context={reportContext} onClose={() => setReportContext(null)} /></Suspense>}</>
+        <footer className="planner-footer"><button type="button" onClick={() => setShowFeedback(true)}>Feedback</button></footer>
+      </main>{reportContext && <Suspense fallback={null}><ReportDialog context={reportContext} onClose={() => setReportContext(null)} /></Suspense>}{showFeedback && <Suspense fallback={null}><FeedbackDialog onClose={() => setShowFeedback(false)} /></Suspense>}</>
     );
   }
 
@@ -97,7 +110,7 @@ export default function App() {
       <header className="navigation-header">
         <Button variant="text" className="route-back" aria-label="Edit route" onClick={() => setSteps(null)}>
           <img src="/icons/back.svg" width="24" height="24" alt="" />
-          <span className="route-endpoints"><span className="eyebrow">{a} →</span><strong>{b}</strong></span>
+          <span className="route-endpoints"><strong>{b}</strong></span>
         </Button>
         <div className="navigation-header-actions">
         <ReportButton onClick={() => setReportContext({ floor: step.floor, point: step.turn === 'up' || step.turn === 'down' ? step.pts.at(-1)! : step.pts[0], from: a, to: b, stepIndex: i, stepText: step.text })} />
@@ -131,7 +144,7 @@ export default function App() {
                 <button
                   type="button"
                   className="overview-step"
-                  aria-label={`Step ${index + 1}: ${instruction.text}`}
+                  aria-label={`Step ${index + 1}: ${instructionLabel(instruction)}`}
                   aria-current={index === i ? 'step' : undefined}
                   onClick={() => {
                     setI(index);
@@ -140,7 +153,7 @@ export default function App() {
                   }}
                 >
                   <span className="step-number" aria-hidden="true">{index + 1}</span>
-                  <span>{instruction.text}</span>
+                  <span>{instructionLabel(instruction)}</span>
                   {index === i && <span className="current-step">Current</span>}
                 </button>
               </li>
@@ -158,14 +171,8 @@ export default function App() {
         </span>
         <div className="instruction">
           <div>
-            <h2>{step.turn === 'arrive' ? 'You have arrived' : step.turn === 'left' ? 'Turn left'
-              : step.turn === 'right' ? 'Turn right' : step.turn === 'around' ? 'Turn around'
-                : step.turn === 'up' || step.turn === 'down' ? step.text
-                  : step.text.startsWith('Exit ') ? `Exit ${a}` : step.text.startsWith('Leave ') ? step.text.split(' and ')[0] : 'Continue straight'}</h2>
-            <p>{step.turn === 'arrive' ? `${b} · ${step.text.split('. You')[0].replace(`${b} is `, '')}`
-              : step.text.match(/about (\d+ ft)/)?.[1] ? `About ${step.text.match(/about (\d+ ft)/)![1]}`
-                : step.text.includes('a short distance') ? 'A short distance' : floorName(step.floor)}</p>
-            <p className="eyebrow">Distances are estimates.</p>
+            <h2>{step.turn === 'arrive' ? 'You have arrived' : instructionLabel(step)}</h2>
+            {step.turn === 'arrive' && <p>{`${b} · ${step.text.split('. You')[0].replace(`${b} is `, '')}`}</p>}
           </div>
         </div>
       </div>

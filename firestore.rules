@@ -57,7 +57,7 @@ service cloud.firestore {
           && request.resource.data.reviewNote is string && request.resource.data.reviewNote.size() <= 1500);
       allow delete: if reviewer() || (signedIn() && resource.data.authorId == request.auth.uid && resource.data.status == 'uploading');
     }
-    // Landing-page feedback (docs/feedback.js): anyone can send, only reviewers can read.
+    // Private app feedback: anyone can send, only reviewers can read.
     match /feedback/{id} {
       allow create: if request.resource.data.keys().hasOnly(['type', 'message', 'from', 'to', 'email', 'createdAt'])
         && request.resource.data.keys().hasAll(['type', 'message', 'from', 'to', 'email', 'createdAt'])

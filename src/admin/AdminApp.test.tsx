@@ -1,9 +1,11 @@
+import { watchFeedback } from '../services/feedback';
 import { watchPhotoCoverage } from '../services/photoCoverage';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminApp } from './AdminApp';
 import { watchAdminIdentity, watchReports } from '../services/admin';
 vi.mock('../services/admin', () => ({ watchAdminIdentity: vi.fn(), watchReports: vi.fn(), signInAdmin: vi.fn(), signOutAdmin: vi.fn(), addAdministrator: vi.fn(), saveEntrance: vi.fn(), addAdminPhoto: vi.fn() }));
+vi.mock('../services/feedback', () => ({ watchFeedback: vi.fn() }));
 describe('administrator access and navigation', () => {
   it('shows sign-in without exposing review tools to guests', () => {
     vi.mocked(watchAdminIdentity).mockImplementation((receive) => { receive(null); return () => {}; });
@@ -16,6 +18,17 @@ describe('administrator access and navigation', () => {
     render(<AdminApp />);
     expect(screen.getByRole('alert')).toHaveTextContent('Access has not been granted');
     expect(screen.queryByRole('button', { name: 'Add entrance' })).toBeNull();
+  });
+  it('keeps private feedback separate from map approvals and can read earlier landing-page messages', () => {
+    vi.mocked(watchAdminIdentity).mockImplementation((receive) => { receive({ email: 'admin@example.com', allowed: true }); return () => {}; });
+    vi.mocked(watchReports).mockImplementation((receive) => { receive([]); return () => {}; });
+    vi.mocked(watchFeedback).mockImplementation((receive) => { receive([{ id: 'legacy', type: 'idea', message: 'Please add saved routes.', email: null, from: 'A112', to: 'K230', createdAtMillis: 1 }]); return () => {}; });
+    render(<AdminApp />);
+    fireEvent.click(screen.getByRole('button', { name: 'Feedback' }));
+    expect(screen.getByText('Please add saved routes.')).toBeInTheDocument();
+    expect(screen.getByText('A112 → K230')).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Report status' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Approve/ })).toBeNull();
   });
   it('offers separate direct entrance and photo entry tools after authorization', () => {
     vi.mocked(watchAdminIdentity).mockImplementation((receive) => { receive({ email: 'admin@example.com', allowed: true }); return () => {}; });
