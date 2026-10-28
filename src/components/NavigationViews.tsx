@@ -6,6 +6,7 @@ import { watchLocationPhotos, loadLocationPhoto } from '../services/locationPhot
 import type { LocationPhoto } from '../services/locationPhotos';
 import { headingForVector, photoPositionsForStep } from './photoPositions';
 import { NavigationMap } from './NavigationMap';
+import { FloorTransition } from './FloorTransition';
 import './NavigationViews.css';
 
 type ViewMode = 'map' | 'split' | 'photo';
@@ -20,6 +21,9 @@ export const NavigationViews = (props: NavigationViewsProps) => {
   // Bounded, per-navigation cache: rotating/stepping back avoids repeated downloads.
   const blobs = useRef(new Map<string, Blob>());
   useEffect(() => watchLocationPhotos(floor, (photos) => setCatalog({ floor, photos, error: false }), () => setCatalog({ floor, photos: [], error: true })), [floor, retry]);
+  const step = props.steps[props.index];
+  // Keyed by step so the ride replays when you come back to it.
+  if (step.via) return <section className="navigation-views" aria-label="Route views"><FloorTransition key={props.index} steps={props.steps} index={props.index} /></section>;
   return <StepScene {...props} photos={catalog?.floor === floor ? catalog.photos : []} loading={catalog?.floor !== floor} error={catalog?.floor === floor && catalog.error} retry={() => { setCatalog(null); setRetry((value) => value + 1); }} preference={preference} setPreference={setPreference} ratio={ratio} setRatio={setRatio} blobs={blobs} />;
 };
 interface SceneProps extends NavigationViewsProps { photos: LocationPhoto[]; loading: boolean; error: boolean; retry: () => void; preference: ViewMode | null; setPreference: (mode: ViewMode) => void; ratio: Ratio; setRatio: (ratio: Ratio) => void; blobs: RefObject<Map<string, Blob>> }

@@ -129,7 +129,7 @@ export default function App() {
         </div>
       </header>
       <div className="route-progress">
-        <p className="eyebrow">Step {i + 1} of {steps.length} · {floorName(step.floor)}</p>
+        <p className="eyebrow">Step {i + 1} of {steps.length} · {step.via ? `${floorName(steps[i - 1].floor)} → ` : ''}{floorName(step.floor)}</p>
         <progress className="bar" value={i + 1} max={steps.length} aria-label="Route progress" />
       </div>
 

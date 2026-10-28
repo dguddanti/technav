@@ -10,6 +10,8 @@ export interface Step {
   text: string;
   pts: Point[];
   floor: Floor;
+  // How a floor change is made; set on 'up' and 'down' steps.
+  via?: 'stairs' | 'elevator';
 }
 export interface RouteOptions {
   // Use elevators only, for step-free routes.
@@ -165,6 +167,7 @@ export function getSteps(from: string, to: string, options: RouteOptions = {}): 
         text: `Take the ${kind} ${up ? 'up' : 'down'} to ${floorName(run.floor)}.`,
         pts: [prev, run.pts[0]],
         floor: run.floor,
+        via: kind,
       });
     }
     const opening = i > 0 ? `Leave the ${run.via} and walk`

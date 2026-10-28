@@ -6,7 +6,7 @@ afterEach(cleanup);
 
 const mapImage = () => screen.getByRole('img', { name: /^Route from/ }).querySelector('image')!.getAttribute('href');
 
-it('switches the map to the floor of the current step', () => {
+it('switches the map to the floor of the current step', async () => {
   const { container } = render(<App />);
   fireEvent.change(screen.getByLabelText('To'), { target: { value: 'L361' } });
   fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
@@ -16,7 +16,13 @@ it('switches the map to the floor of the current step', () => {
   expect(container.querySelector('.goal')).toBeNull();
 
   while (!screen.queryByText(/up to Floor 3/)) fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText(/· Floor 3/)).toBeInTheDocument();
+  // The ride itself shows the floors it passes, not a floor plan.
+  expect(screen.getByText(/· Floor 1 → Floor 3/)).toBeInTheDocument();
+  expect(await screen.findByRole('region', { name: 'Stairs from Floor 1 to Floor 3' })).toBeInTheDocument();
+  expect(screen.queryByRole('img', { name: /^Route from/ })).toBeNull();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(screen.getByText(/· Floor 3$/)).toBeInTheDocument();
   expect(mapImage()).toBe('/maps/floor-3.png');
   expect(container.querySelector('.goal')).not.toBeNull();
 });
