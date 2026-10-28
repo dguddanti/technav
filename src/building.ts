@@ -5,6 +5,7 @@ import { floor as firstExtras } from './floors/floor-1';
 import { floor as second } from './floors/floor-2';
 import { floor as third } from './floors/floor-3';
 import { floor as fourth } from './floors/floor-4';
+import { extraRooms } from './floors/extra-rooms';
 import type { FloorData, Shaft } from './floors/types';
 import type { Point } from './route';
 
@@ -51,12 +52,13 @@ const id = (floor: Floor, node: string) => `${floor}:${node}`;
 
 FLOORS.forEach(({ id: floor }, i) => {
   const d = data[floor];
-  for (const [n, p] of Object.entries(d.nodes)) {
+  const extra = extraRooms[floor];
+  for (const [n, p] of Object.entries({ ...d.nodes, ...extra.nodes })) {
     nodes[id(floor, n)] = p;
     floorOf[id(floor, n)] = floor;
   }
-  for (const [a, b] of d.edges) edges.push([id(floor, a), id(floor, b)]);
-  for (const [name, [n, door]] of Object.entries(d.places)) {
+  for (const [a, b] of [...d.edges, ...extra.edges]) edges.push([id(floor, a), id(floor, b)]);
+  for (const [name, [n, door]] of Object.entries({ ...d.places, ...extra.places })) {
     places[name] = [id(floor, n), door];
     placeFloor[name] = floor;
   }

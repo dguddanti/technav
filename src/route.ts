@@ -1,6 +1,7 @@
 import { places, placeFloor } from './locations';
 import { nodes, edges, links, floorOf, floorName, floorLevel, STAIRS_COST, ELEVATOR_COST } from './building';
 import type { Floor } from './building';
+import { restrooms } from './data/restrooms';
 
 export { places };
 export type Point = [number, number];
@@ -36,8 +37,8 @@ for (const { a, b, kind } of links) {
   (adj[b] ??= []).push([a, w, kind]);
 }
 
-// Shortest path by walking distance (Dijkstra). Returns the nodes and how each was reached.
-function findPath(from: string, to: string, options: RouteOptions): { node: string; via: Hop[2] }[] {
+// Walking distances from a node (Dijkstra), stopping at the first node that satisfies `goal`.
+function search(from: string, options: RouteOptions, goal: (node: string) => boolean) {
   const best: Record<string, number> = { [from]: 0 };
   const prev: Record<string, [string, Hop[2]]> = {};
   const todo = new Set([from]);
@@ -45,7 +46,7 @@ function findPath(from: string, to: string, options: RouteOptions): { node: stri
     let n = '';
     for (const c of todo) if (n === '' || best[c] < best[n]) n = c;
     todo.delete(n);
-    if (n === to) break;
+    if (goal(n)) return { best, prev, reached: n };
     for (const [m, w, via] of adj[n] ?? []) {
       if (via === 'stairs' && options.avoidStairs) continue;
       if (best[m] === undefined || best[n] + w < best[m]) {
@@ -55,6 +56,12 @@ function findPath(from: string, to: string, options: RouteOptions): { node: stri
       }
     }
   }
+  return { best, prev, reached: undefined };
+}
+
+// Shortest path by walking distance. Returns the nodes and how each was reached.
+function findPath(from: string, to: string, options: RouteOptions): { node: string; via: Hop[2] }[] {
+  const { best, prev } = search(from, options, (n) => n === to);
   if (best[to] === undefined) {
     throw new Error(options.avoidStairs
       ? 'No step-free route is available between these locations. Try allowing stairs.'
@@ -123,6 +130,15 @@ function walk(pts: Point[], floor: Floor, start: string): { steps: Step[]; d: nu
     return { turn: 'around', text: `Turn around. Walk ${distance}.`, pts: leg.pts, floor };
   });
   return { steps, d: directions.length ? directions[directions.length - 1].d : 0 };
+}
+
+// The restroom with the shortest walk from a place, or undefined if none can be reached.
+export function nearestRestroom(from: string, options: RouteOptions = {}): string | undefined {
+  if (!Object.hasOwn(places, from)) return undefined;
+  const byNode = new Map<string, string>();
+  for (const name of restrooms) if (Object.hasOwn(places, name) && name !== from) byNode.set(places[name][0], name);
+  const { reached } = search(places[from][0], options, (n) => byNode.has(n));
+  return reached === undefined ? undefined : byNode.get(reached);
 }
 
 export function getSteps(from: string, to: string, options: RouteOptions = {}): Step[] {
