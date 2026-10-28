@@ -51,6 +51,14 @@ export const Combobox = ({ id, label, value, options, placeholder, describedBy, 
     setActive(-1);
   };
 
+  const clear = () => {
+    onChange('');
+    setOpen(false);
+    setFilter('');
+    setActive(-1);
+    input.current?.focus();
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
@@ -77,6 +85,7 @@ export const Combobox = ({ id, label, value, options, placeholder, describedBy, 
     }}>
       <label className="ui-label" htmlFor={id}>{label}</label>
       <div className={`ui-combobox ${expanded ? 'is-open' : ''}`}>
+        <svg className="ui-combobox-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /></svg>
         <input
           ref={input}
           id={id}
@@ -100,6 +109,11 @@ export const Combobox = ({ id, label, value, options, placeholder, describedBy, 
           }}
           onKeyDown={onKeyDown}
         />
+        {value && (
+          <button type="button" className="ui-combobox-clear" aria-label={`Clear ${label}`} onClick={clear}>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>
+          </button>
+        )}
       </div>
       {expanded && (
         <div className="ui-combobox-popup">
