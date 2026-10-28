@@ -29,6 +29,24 @@ describe('route planning', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
+  it('routes to the nearest restroom from the quick option', () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: 'E149' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find the nearest restroom' }));
+    expect(screen.getByLabelText('To')).toHaveValue('Nearest restroom');
+    expect(screen.queryByRole('button', { name: 'Find the nearest restroom' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
+    expect(screen.getByRole('button', { name: 'Edit route' })).toHaveTextContent(/^Restroom E1(31|47)$/);
+  });
+
+  it('offers the nearest restroom for restroom searches and hides restroom numbers', () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'bathroom' } });
+    expect(screen.getByRole('option', { name: 'Nearest restroom' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: 'E14' } });
+    expect(screen.queryByRole('option', { name: 'E147' })).toBeNull();
+  });
+
   it('explains unsupported locations and identical endpoints', () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'F925' } });

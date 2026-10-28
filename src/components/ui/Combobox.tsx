@@ -6,13 +6,15 @@ interface ComboboxProps {
   label: string;
   value: string;
   options: readonly string[];
+  // Extra words an option also matches, e.g. synonyms.
+  keywords?: Record<string, string>;
   placeholder?: string;
   describedBy?: string;
   invalid?: boolean;
   onChange: (value: string) => void;
 }
 
-export const Combobox = ({ id, label, value, options, placeholder, describedBy, invalid, onChange }: ComboboxProps) => {
+export const Combobox = ({ id, label, value, options, keywords, placeholder, describedBy, invalid, onChange }: ComboboxProps) => {
   const listId = useId();
   const field = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -20,7 +22,8 @@ export const Combobox = ({ id, label, value, options, placeholder, describedBy, 
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const [active, setActive] = useState(-1);
-  const matches = options.filter((option) => option.toLowerCase().includes(filter.trim().toLowerCase()));
+  const query = filter.trim().toLowerCase();
+  const matches = options.filter((option) => `${option} ${keywords?.[option] ?? ''}`.toLowerCase().includes(query));
   const expanded = open && !!filter.trim();
 
   useEffect(() => {

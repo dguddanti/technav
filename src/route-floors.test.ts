@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FLOORS, links, placeFloor, places } from './building';
-import { getSteps } from './route';
+import { getSteps, nearestRestroom } from './route';
+import { restrooms } from './data/restrooms';
 
 describe('routes between floors', () => {
   it('lists rooms on every floor', () => {
@@ -61,5 +62,14 @@ describe('routes between floors', () => {
       }
     });
     expect(unreachable.length).toBeLessThanOrEqual(3);
+  }, 30000);
+
+  it('finds the nearest restroom, on another floor when needed', () => {
+    for (const name of restrooms) expect(places, name).toHaveProperty(name);
+    expect(['E131', 'E147']).toContain(nearestRestroom('E149'));
+    const fromBasement = nearestRestroom('KB34')!;
+    expect(restrooms.has(fromBasement)).toBe(true);
+    expect(placeFloor[fromBasement]).not.toBe('B');
+    expect(getSteps('KB34', fromBasement).at(-1)!.turn).toBe('arrive');
   });
 });

@@ -142,7 +142,9 @@ corrections use Firestore and do not require Storage.
    `node scripts/seed-report-registry.mjs --production`. This writes the fixed
    station/node registries and bootstrap administrator; it does not modify
    published entrances, reports, or photos. Repeat only when intentionally
-   publishing a registry change. Credentials are never printed by the script. Both registry scripts also accept
+   publishing a registry change. After adding rooms with `scripts/add_rooms.py`, add
+   `--hallway-nodes-only` to write just the hallway points and leave photo spots and
+   administrators untouched. Credentials are never printed by the script. Both registry scripts also accept
    `GOOGLE_OAUTH_ACCESS_TOKEN` from a trusted deployment process instead of gcloud.
 5. Before deploying the duplicate-photo rules on an existing database, run
    `node scripts/backfill-photo-coverage.mjs --production` to reserve views from
