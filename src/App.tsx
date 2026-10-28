@@ -1,5 +1,6 @@
 import { lazy, Suspense, useRef, useState, useSyncExternalStore } from 'react';
-import { places, getSteps, nearestRestroom } from './route';
+import type { JSX } from 'react';
+import { places, getSteps, nearestOf } from './route';
 import type { Step } from './route';
 import { FLOORS, floorName } from './building';
 import { NavigationMap } from './components/NavigationMap';
@@ -15,10 +16,14 @@ import './feedback/feedback.css';
 const FeedbackDialog = lazy(() => import('./feedback/FeedbackDialog').then((module) => ({ default: module.FeedbackDialog })));
 
 import { placeFloor, locationRevision, subscribeLocations } from './locations';
-import { restrooms } from './data/restrooms';
+import { amenities, amenityPlaces } from './data/amenities';
+import type { Amenity } from './data/amenities';
 
-const NEAREST_RESTROOM = 'Nearest restroom';
-const RESTROOM_KEYWORDS = { [NEAREST_RESTROOM]: 'bathroom toilet washroom wc 화장실' };
+const amenityKeywords = Object.fromEntries(amenities.map((amenity) => [amenity.label, amenity.keywords]));
+const amenityIcons: Record<string, JSX.Element> = {
+  'restroom-women': <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2" /><path d="M10 9h4l2.5 7h-9zM10.5 16v5m3-5v5" /></svg>,
+  'restroom-men': <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2" /><path d="M9 9h6v7H9zM10.5 16v5m3-5v5" /></svg>,
+};
 
 const ReportButton = ({ onClick }: { onClick: () => void }) => <button type="button" className="report-trigger" aria-label="Report an issue" onClick={onClick}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3m0 1c5-4 9 4 14 0v10c-5 4-9-4-14 0" /></svg><span>Report</span></button>;
 
@@ -34,12 +39,13 @@ const instructionLabel = (step: Step) => {
 export default function App() {
   useSyncExternalStore(subscribeLocations, locationRevision);
   const names = Object.keys(places);
-  const rooms = names.filter((n) => !restrooms.has(n));
+  const rooms = names.filter((n) => !amenityPlaces.has(n));
   const [from, setFrom] = useState('Main Entrance');
   const [to, setTo] = useState('');
   const [steps, setSteps] = useState<Step[] | null>(null);
-  // Where the route actually ends; differs from `to` when heading to the nearest restroom.
+  // Where the route actually ends; differs from `to` when heading to the nearest amenity.
   const [destination, setDestination] = useState('');
+  const [destinationAmenity, setDestinationAmenity] = useState<Amenity | undefined>();
   const [i, setI] = useState(0);
   const [error, setError] = useState('');
   const [reportContext, setReportContext] = useState<ReportContext | null>(null);
@@ -51,8 +57,9 @@ export default function App() {
   // Match what was typed to a place, ignoring case.
   const find = (s: string) => names.find((n) => n.toLowerCase() === s.trim().toLowerCase());
   const a = find(from);
-  const b = to.trim().toLowerCase() === NEAREST_RESTROOM.toLowerCase() ? NEAREST_RESTROOM : find(to);
-  const destinationLabel = restrooms.has(destination) ? `Restroom ${destination}` : destination;
+  const amenity = amenities.find((option) => option.label.toLowerCase() === to.trim().toLowerCase());
+  const b = amenity ? amenity.label : find(to);
+  const destinationLabel = destinationAmenity ? `${destinationAmenity.name} ${destination}` : destination;
 
   if (!steps) {
     return (
@@ -65,13 +72,14 @@ export default function App() {
           event.preventDefault();
           if (!a || !b || a === b) return;
           try {
-            const end = b === NEAREST_RESTROOM ? nearestRestroom(a, { avoidStairs }) : b;
-            if (!end) throw new Error('No restroom can be reached from here. Try allowing stairs.');
+            const end = amenity ? nearestOf(a, amenity.places, { avoidStairs }) : b;
+            if (!end) throw new Error(`No ${amenity!.name.toLowerCase()} can be reached from here.${avoidStairs ? ' Try allowing stairs.' : ''}`);
             const planned = getSteps(a, end, { avoidStairs });
             // Fetch this route's floor plans now so switching floors does not wait on them.
             for (const f of FLOORS) if (planned.some((s) => s.floor === f.id)) new Image().src = f.image;
             setSteps(planned);
             setDestination(end);
+            setDestinationAmenity(amenity);
             setI(0);
             setShowOverview(false);
             setError('');
@@ -84,16 +92,21 @@ export default function App() {
           <Combobox id="from" label="From" value={from} options={rooms}
             placeholder="Search location" describedBy="validation" invalid={!!from.trim() && !a}
             onChange={(value) => { setFrom(value); setError(''); }} />
-          <Combobox id="to" label="To" value={to} options={[NEAREST_RESTROOM, ...rooms]} keywords={RESTROOM_KEYWORDS}
+          <Combobox id="to" label="To" value={to} options={[...amenities.map((option) => option.label), ...rooms]} keywords={amenityKeywords}
             placeholder="Search location" describedBy="validation" invalid={(!!to.trim() && !b) || (!!a && a === b)}
             onChange={(value) => { setTo(value); setError(''); }} />
         </div>
-        {b !== NEAREST_RESTROOM && (
-          <button type="button" className="quick-destination" onClick={() => { setTo(NEAREST_RESTROOM); setError(''); }}>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="4.5" r="1.75" /><circle cx="17" cy="4.5" r="1.75" /><path d="M7 8v13M4.5 9h5v6h-5zM17 8l-3 8h6zM16 16v5m2-5v5M12 3v18" /></svg>
-            Find the nearest restroom
-          </button>
-        )}
+        <div className="nearby" role="group" aria-labelledby="nearby-label">
+          <span id="nearby-label" className="ui-label">Or go to the nearest</span>
+          <div className="nearby-options">
+            {amenities.map((option) => (
+              <button key={option.id} type="button" className="nearby-option" aria-pressed={amenity === option}
+                onClick={() => { setTo(amenity === option ? '' : option.label); setError(''); }}>
+                {amenityIcons[option.id]}<span>{option.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <label className="route-option">
           <input type="checkbox" checked={avoidStairs}
             onChange={(e) => { setAvoidStairs(e.target.checked); setError(''); }} />
@@ -127,7 +140,7 @@ export default function App() {
       <header className="navigation-header">
         <Button variant="text" className="route-back" aria-label="Edit route" onClick={() => setSteps(null)}>
           <img src="/icons/back.svg" width="24" height="24" alt="" />
-          <span className="route-endpoints"><strong>{destinationLabel}</strong></span>
+          <span className="route-endpoints">{destinationAmenity && <span className="eyebrow">{destinationAmenity.label}</span>}<strong>{destination}</strong></span>
         </Button>
         <div className="navigation-header-actions">
         <ReportButton onClick={() => setReportContext({ floor: step.floor, point: step.turn === 'up' || step.turn === 'down' ? step.pts.at(-1)! : step.pts[0], from: a, to: destination, stepIndex: i, stepText: step.text })} />

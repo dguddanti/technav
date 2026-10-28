@@ -1,7 +1,6 @@
 import { places, placeFloor } from './locations';
 import { nodes, edges, links, floorOf, floorName, floorLevel, STAIRS_COST, ELEVATOR_COST } from './building';
 import type { Floor } from './building';
-import { restrooms } from './data/restrooms';
 
 export { places };
 export type Point = [number, number];
@@ -132,11 +131,11 @@ function walk(pts: Point[], floor: Floor, start: string): { steps: Step[]; d: nu
   return { steps, d: directions.length ? directions[directions.length - 1].d : 0 };
 }
 
-// The restroom with the shortest walk from a place, or undefined if none can be reached.
-export function nearestRestroom(from: string, options: RouteOptions = {}): string | undefined {
+// The place among `candidates` with the shortest walk from `from`, or undefined if none can be reached.
+export function nearestOf(from: string, candidates: readonly string[], options: RouteOptions = {}): string | undefined {
   if (!Object.hasOwn(places, from)) return undefined;
   const byNode = new Map<string, string>();
-  for (const name of restrooms) if (Object.hasOwn(places, name) && name !== from) byNode.set(places[name][0], name);
+  for (const name of candidates) if (Object.hasOwn(places, name) && name !== from) byNode.set(places[name][0], name);
   const { reached } = search(places[from][0], options, (n) => byNode.has(n));
   return reached === undefined ? undefined : byNode.get(reached);
 }

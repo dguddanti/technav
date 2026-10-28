@@ -29,20 +29,31 @@ describe('route planning', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeDisabled();
   });
 
-  it('routes to the nearest restroom from the quick option', () => {
+  it('routes to the nearest restroom of the chosen kind', () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText('From'), { target: { value: 'E149' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Find the nearest restroom' }));
-    expect(screen.getByLabelText('To')).toHaveValue('Nearest restroom');
-    expect(screen.queryByRole('button', { name: 'Find the nearest restroom' })).toBeNull();
+    const men = screen.getByRole('button', { name: "Men's room" });
+    fireEvent.click(men);
+    expect(screen.getByLabelText('To')).toHaveValue("Nearest men's room");
+    expect(men).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Get Directions' }));
-    expect(screen.getByRole('button', { name: 'Edit route' })).toHaveTextContent(/^Restroom E1(31|47)$/);
+    expect(screen.getByRole('button', { name: 'Edit route' })).toHaveTextContent("Nearest men's roomE147");
   });
 
-  it('offers the nearest restroom for restroom searches and hides restroom numbers', () => {
+  it('clears the amenity when its button is pressed again', () => {
+    render(<App />);
+    const women = screen.getByRole('button', { name: "Women's room" });
+    fireEvent.click(women);
+    fireEvent.click(women);
+    expect(screen.getByLabelText('To')).toHaveValue('');
+    expect(women).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('offers restrooms for restroom searches and hides restroom numbers', () => {
     render(<App />);
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'bathroom' } });
-    expect(screen.getByRole('option', { name: 'Nearest restroom' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: "Nearest women's room" })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: "Nearest men's room" })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('To'), { target: { value: 'E14' } });
     expect(screen.queryByRole('option', { name: 'E147' })).toBeNull();
   });

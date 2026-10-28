@@ -1,9 +1,15 @@
-// Rooms drawn as restrooms on the floor plans. They are routable but are offered through
-// "Nearest restroom" instead of the room search.
-export const restrooms = new Set([
-  'AG81', 'AG82', 'EG31', 'EG47', 'FG28', 'KG25', 'KG39', 'LG51', 'LG79', 'MG31', 'MG69', 'MG85',
-  'A141', 'A181', 'A182', 'E131', 'E147', 'F128', 'K125', 'K139', 'L157', 'L169', 'M131', 'M135', 'M161', 'M173',
-  'A241', 'E237', 'E247', 'F230', 'F287', 'K225', 'K239', 'L281', 'L283', 'M231', 'M275',
-  'A380', 'A382', 'E347', 'E349', 'K325', 'K339', 'L319', 'L383', 'M331', 'M373',
-  'A480', 'A481', 'L451', 'L479', 'M433', 'M439',
-]);
+export type RestroomKind = 'women' | 'men' | 'all';
+
+// Restrooms on the floor plans, by the figure drawn in them; 'all' rooms have no figure.
+// They are routable but are offered through the nearest-amenity options instead of the room search.
+export const restrooms: Record<string, RestroomKind> = {
+  AG81: 'women', AG82: 'men', EG31: 'women', EG47: 'men', FG28: 'all', KG25: 'women', KG39: 'men',
+  LG51: 'men', LG79: 'women', MG31: 'men', MG69: 'women', MG85: 'women',
+  A141: 'women', A181: 'women', A182: 'men', E131: 'women', E147: 'men', F128: 'men', K125: 'women',
+  K139: 'men', L157: 'women', L169: 'men', M131: 'men', M135: 'women', M161: 'women', M173: 'women',
+  A241: 'men', E237: 'women', E247: 'men', F230: 'women', F287: 'all', K225: 'women', K239: 'men',
+  L281: 'women', L283: 'men', M231: 'men', M275: 'women',
+  A380: 'women', A382: 'men', E347: 'men', E349: 'women', K325: 'women', K339: 'men', L319: 'men',
+  L383: 'women', M331: 'men', M373: 'women',
+  A480: 'men', A481: 'women', L451: 'women', L479: 'men', M433: 'men', M439: 'women',
+};
