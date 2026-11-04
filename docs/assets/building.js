@@ -183,8 +183,9 @@ document.querySelectorAll('[data-view]').forEach((button) => button.addEventList
 document.querySelector('#previous-step').addEventListener('click', () => changeStep(-1));
 document.querySelector('#next-step').addEventListener('click', () => changeStep(1));
 const screenshots = {
-  navigation: { src: 'assets/app-navigation.png', alt: 'The working app showing the route to A112, a turn-left instruction, and Back and Next controls.', caption: 'Main Entrance → A112 / Turn-by-turn directions' },
-  search: { src: 'assets/app-search.png', alt: 'Searching for A112, with the matching room underneath the destination field.', caption: 'Main Entrance → A112 / Location search' },
+  search: { src: 'assets/app-search.jpg', alt: 'The start screen with Main Entrance in From, Nearest women’s room in To, and Women’s room and Men’s room buttons under “Or go to the nearest”.', caption: 'Main Entrance → Nearest women’s room / Location search' },
+  navigation: { src: 'assets/app-navigation.jpg', alt: 'The working app showing the route to A112, a turn-left instruction, and Back and Next controls.', caption: 'Main Entrance → A112 / Turn-by-turn directions' },
+  floors: { src: 'assets/app-floors.jpg', alt: 'An elevator step drawn as stacked floor slabs, with the route rising from Floor 1 past Floor 2 to Floor 3.', caption: 'Main Entrance → K330 / Elevator ride, step-free' },
 };
 document.querySelectorAll('[data-screen]').forEach((button) => button.addEventListener('click', () => {
   const selected = screenshots[button.dataset.screen];
